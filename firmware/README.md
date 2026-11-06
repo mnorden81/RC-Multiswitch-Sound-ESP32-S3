@@ -1,11 +1,11 @@
-# Firmware RC-Multiswitch-Sound v1.00
+# Firmware RC-Multiswitch-Sound v1.01
 
 Arduino-Sketch `RC_Multiswitch_Sound/` fuer die Platine v0.9 mit ESP32-S3-DevKitC-1 N16R8. Nicht auf Hardware getestet.
 
 Reine Zusammenfuehrung von RC-Multiswitch-ESP32-S3 v4.06 (Schaltteil, = Multiswitch-Basis V3/TXRX) und ESP32-Sound-Basis_Ziege-One v7.21 (Soundteil). Was neu ist, steht im Kopf von `RC_Multiswitch_Sound.ino`.
 
 ## Arduino IDE
-1. Board-Verwalter: **esp32 von Espressif, Version 3.0.7**.
+1. Board-Verwalter: **esp32 von Espressif, Version 3.0.7** (getestet in GitHub Actions; 3.3.12 baut ebenfalls).
 2. Bibliotheken: **Bolder Flight Systems SBUS 8.1.4**, **TinyGPSPlus 1.0.3**.
 3. `RC_Multiswitch_Sound/RC_Multiswitch_Sound.ino` oeffnen.
 4. Werkzeuge:

@@ -1,5 +1,5 @@
 /*
-    RC-Multiswitch-Sound  v1.00  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
+    RC-Multiswitch-Sound  v1.01  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
 
  /////Projektbeschreibung////
  8-Kanal-Schaltmodul und Soundmodul in einer Firmware. Reine
@@ -25,6 +25,9 @@
    0 = FrSky   1 = FlySky   2 = ELRS normiert (SBUS)   3 = HoTT (SBUS)
    4 = CRSF (ExpressLRS / TBS CrossFire, bidirektional)
  Lua-Konfiguration und Modulkette gibt es nur bei CRSF.
+
+ NEU v1.01: baut auch mit esp32-Core 3.3.x (BOOT_PIN heisst jetzt
+   BOOT_BTN_PIN, weil der neue Core BOOT_PIN selbst definiert).
 
  NEU v1.00 (Entscheidungen vom 21.-28.10.2026):
    - Zwei Adressen: "Switch Addr" (Lua 3) fuer die Ausgaenge, zugleich
@@ -83,7 +86,7 @@
 #include "src/RC_Common/config_backup.h"   // v4.06
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
 
-constexpr uint16_t Version = 100; // 1.00 - CRSF Parameter Version Number
+constexpr uint16_t Version = 101; // 1.01 - CRSF Parameter Version Number
 uint16_t fwVersion() { return Version; }   // fuer sound_web.cpp
 
 // ======== SBUS-Schwellen (benannte Konstanten) ==================
@@ -917,7 +920,7 @@ static void bootButtonCheck() {
     static bool          fired   = false;
     static unsigned long downMs  = 0;
 
-    bool down = (digitalRead(BOOT_PIN) == LOW);
+    bool down = (digitalRead(BOOT_BTN_PIN) == LOW);
     if (!armed) { if (!down) armed = true; return; }
     if (!down) { pressed = false; return; }
     unsigned long now = millis();
@@ -1095,7 +1098,7 @@ void setup() {
     }
 
     statusLed.begin(g_led_pin, true, STATUS_LED_BRIGHTNESS);   // v1.00: IO48 oder IO38
-    pinMode(BOOT_PIN, INPUT_PULLUP);   // v4.01: BOOT-Taster fuer den WLAN-AP
+    pinMode(BOOT_BTN_PIN, INPUT_PULLUP);   // v4.01: BOOT-Taster fuer den WLAN-AP
 
     // v1.00: Reihenfolge wie Sound-Basis: SD-Karte und Motor-Dateien vor dem
     // WLAN-Start, SD-Lese-Task und Sample-Puffer danach

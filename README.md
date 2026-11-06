@@ -45,7 +45,7 @@ Board: ESP32-S3-DevKitC-1 N16R8 (oder Clone)
 - Footprint ESP32-S3-DevKitC-1_THT mit Reihenabstand 25,4 mm. Vor dem Layout am echten Board nachmessen. Eigene Footprints fuer PCM5102A, microSD-Modul und TPA3118-Modul liegen in hardware/footprints.pretty; die Masse sind aus Fotos geschaetzt und vor dem Layout nachzumessen.
 - Nicht gleichzeitig USB und BEC anschliessen, ohne die Schutzdiode des Boards zu pruefen.
 
-## Firmware (v1.00, nicht auf Hardware getestet)
+## Firmware (v1.01, nicht auf Hardware getestet)
 Arduino-Sketch [firmware/RC_Multiswitch_Sound](firmware/RC_Multiswitch_Sound), Beschreibung in [firmware/README.md](firmware/README.md).
 
 Reine Zusammenfuehrung von zwei bestehenden Firmwares:
@@ -67,7 +67,7 @@ Neu gegenueber den Basis-Firmwares (Entscheidungen 21.-28.10.2026):
 
 ## Stand
 - Hardware: Schaltplan v0.8, PCB in Arbeit. ERC-Stand v0.3 (hardware/ERC.rpt): 1 Fehler (IO8 unbeschaltet, seit v0.4 mit No-Connect-Flag, plus Rest-Leitungsstueck entfernt) und 55 Warnungen (Bibliotheksversionen "power"/"Device"/"local", harmlos). Nach v0.8 ERC neu ausfuehren.
-- Firmware: v1.00 (Multiswitch V3 + Sound-Basis v7.21), baut in GitHub Actions, auf Hardware noch nicht getestet.
+- Firmware: v1.01 (Multiswitch V3 + Sound-Basis v7.21), baut in GitHub Actions, auf Hardware noch nicht getestet.
 
 ## Offene Punkte
 - R1-R16 vom Anwender je LED bzw. Verbraucher auslegen (3S, ca. 11-12 V); Helligkeit schwankt mit dem Ladezustand.
@@ -78,4 +78,4 @@ Neu gegenueber den Basis-Firmwares (Entscheidungen 21.-28.10.2026):
 - Module nachmessen und Footprints anpassen: PCM5102A, microSD-Modul, TPA3118 (Padlage, Befestigungsloecher, Belegung IN/GND per Multimeter pruefen), ESP32-S3-DevKitC-1.
 - PCB-Layout erstellen
 - Gehaeuse (hardware/gehaeuse/) am echten Aufbau pruefen: Hoehe Elko C1 (22 mm angenommen), ESP 13 mm ueber der Platine, Lage USB-C und microSD-Slot
-- Firmware v1.00 auf der Platine testen (Ausgaenge, Sound, SD-Karte, Status-LED IO48/IO38)
+- Firmware v1.01 auf der Platine testen (Ausgaenge, Sound, SD-Karte, Status-LED IO48/IO38)

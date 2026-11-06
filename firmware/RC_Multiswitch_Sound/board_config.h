@@ -54,7 +54,7 @@ static constexpr uint8_t I2S_BCLK = 14;
 static constexpr uint8_t I2S_LRC  = 21;
 static constexpr uint8_t I2S_DOUT = 47;
 
-static constexpr uint8_t BOOT_PIN = 0;
+static constexpr uint8_t BOOT_BTN_PIN = 0;
 
 // RGB-LED (WS2812) des DevKitC-1: v1.0 an IO48, v1.1 an IO38. Der Pin wird
 // in der Web-UI gewaehlt (NVS "ledpin", wirkt nach einem Neustart).
