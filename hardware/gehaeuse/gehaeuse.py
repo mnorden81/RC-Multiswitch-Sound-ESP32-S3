@@ -23,6 +23,7 @@ LIPPE     = 3.0      # Hoehe der Zentrierlippe am Deckel
 TOL       = 0.25     # Spiel Lippe <-> Innenwand
 J1_GEWINKELT = "--gewinkelt" in sys.argv   # True = gewinkelte Stiftleiste 2x8, Stecker durch die vordere Wand
 J1_SCHLITZ_H = 6.0   # Hoehe Wandschlitz fuer die Stecker ueber Platinen-Oberkante (Leiste 5,1 mm)
+J1_SCHLITZ_U = 1.0   # Schlitz reicht so weit unter die Platinen-Unterseite (Stecker sitzt vor der Kante, Luft fuer tiefer sitzende Leiste)
 # J1 Pad 1 bei KiCad (251.42, 141.75), Pins nach links bis x - 17,78, 2. Reihe bei y + 2,54.
 # Gewinkelte Leiste (KiCad PinHeader_2x08_P2.54mm_Horizontal): Kunststoff 4,04-6,58 mm ab Pad-1-Reihe,
 # Pins enden 12,58 mm ab Pad-1-Reihe, Koerper 0-5,08 mm ueber der Platine.
@@ -74,7 +75,7 @@ OEFFNUNGEN = [
 ]
 if J1_GEWINKELT:   # statt Kabelschlitz: Schlitz fuer 8 Stecker 2-polig (je 2,54 mm), 0,6 mm Luft je Seite
     OEFFNUNGEN[-1] = ("J1 Ausgaenge", "U", kx(J1_PIN[0] - 17.78 - 1.27 - 0.6), kx(J1_PIN[0] + 1.27 + 0.6),
-                      -0.2, J1_SCHLITZ_H)
+                      -(PCB_T + J1_SCHLITZ_U), J1_SCHLITZ_H)
 
 def wand_schnitt(w, a, b, z0, z1):
     za, zb = Z_TOP + z0, Z_TOP + z1
