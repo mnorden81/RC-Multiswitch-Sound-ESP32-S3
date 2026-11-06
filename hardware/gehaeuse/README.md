@@ -40,16 +40,29 @@ Fuer eine gewinkelte Stiftleiste 2x8, 2,54 mm an J1 statt der stehenden. Die Ste
 
 ![Gehaeuse gewinkelt, Vorderseite](gehaeuse_gewinkelt_vorne.png)
 
+![J1 mit Dupont-Steckern](gehaeuse_gewinkelt_j1.png)
+
 | Datei | Inhalt |
 |---|---|
-| `Gehaeuse_Unterteil_gewinkelt.stl` / `.step` | Unterteil mit Schlitz 21,5 x 6,2 mm in der vorderen Wand |
+| `Gehaeuse_Unterteil_gewinkelt.stl` / `.step` | Unterteil mit Schlitz 21,5 x 8,6 mm in der vorderen Wand |
 | `Gehaeuse_Deckel_gewinkelt.stl` / `.step` | Deckel ohne J1-Ausschnitt |
-| `Gehaeuse3D_Vorschau_gewinkelt.html` | 3D-Vorschau dieser Version |
+| `Gehaeuse3D_Vorschau_gewinkelt.html` | drehbare 3D-Vorschau mit bestueckter Platine, Stiftleiste und Dupont-Steckern, dazu ein massstaeblicher Schnitt durch einen Ausgang (im Browser oeffnen) |
 
+### Stiftleiste
+- Teil: Stiftleiste 2x8, Raster 2,54 mm, gewinkelt (90 Grad), Kunststoff 2,5 mm, Stifte ca. 6 mm lang.
 - Die Leiste wird in die vorhandenen Loecher von J1 geloetet, der Kunststoffkoerper zeigt zur vorderen Platinenkante. Die Platine bleibt unveraendert.
-- Masse nach KiCad-Footprint `PinHeader_2x08_P2.54mm_Horizontal`: Koerper 5,1 mm hoch, steht ca. 0,6 mm ueber die Platinenkante, die Pins ragen ca. 3,8 mm aus der Aussenwand.
-- Oben liegen die Ausgaenge (ungerade Pins), unten VLOAD (gerade Pins).
-- Der Schlitz passt fuer 8 Dupont-Stecker 2-polig nebeneinander (je 2,54 x 5,08 mm).
+- Der Koerper steht ca. 0,6 mm ueber die Platinenkante. Leiste flach auf die Platine druecken, erst einen Stift loeten, dann ausrichten.
+- Belegung: oben liegen die Ausgaenge 1-8 (ungerade Pins), unten VLOAD (gerade Pins).
+- Masse nach KiCad-Footprint `PinHeader_2x08_P2.54mm_Horizontal`: Koerper 5,1 mm hoch, untere Stiftreihe 1,27 mm und obere 3,81 mm ueber der Platine.
+
+### Schlitz in der Vorderwand
+- 21,5 x 8,6 mm: von 1 mm unter der Platinen-Unterseite bis 6 mm ueber der Platinen-Oberseite (Parameter `J1_SCHLITZ_U` und `J1_SCHLITZ_H` in `gehaeuse.py`).
+- Die Stecker sitzen vor der Platinenkante und reichen nach Footprint genau bis zur Platinen-Oberseite. Unten bleiben 2,6 mm Luft, falls die Leiste etwas tiefer sitzt (Stand bis 06.11.2026 waren es nur 0,2 mm, das war zu knapp).
+- Die Vorderwand ist dort 4,4 mm dick (Aussenkontur um die Eckdome). Die Stifte ragen ca. 1,6 mm aus der Wand, die Stecker werden 4,4 mm tief in den Schlitz geschoben.
+- Passt fuer 8 Dupont-Stecker 1x2 nebeneinander (je 2,54 x 5,08 mm) oder einen Stecker 2x8.
+
+![Schnitt durch einen Ausgang, alt und aktuell](gehaeuse_gewinkelt_schnitt.png)
+
 - Aussenmasse wie bei der stehenden Version.
 - Erzeugen: `python gehaeuse.py export --gewinkelt`
 

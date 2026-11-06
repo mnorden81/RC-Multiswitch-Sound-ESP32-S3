@@ -63,6 +63,7 @@ Neu gegenueber den Basis-Firmwares (Entscheidungen 21.-28.10.2026):
 - `hardware/`: KiCad-Projekt (Schaltplan, PCB, PDF, eigene Footprints, fp-lib-table). Entwurfsnotizen in [hardware/README-hardware.md](hardware/README-hardware.md).
 - `firmware/`: Firmware (Arduino-Sketch `RC_Multiswitch_Sound`), Build in GitHub Actions.
 - `hardware/gehaeuse/`: 3D-Druck-Gehaeuse (STL, STEP, CadQuery-Quelle), siehe [hardware/gehaeuse/README.md](hardware/gehaeuse/README.md).
+  - Zwei Versionen: J1 als stehende Stiftleiste (Kabel nach vorne/oben) oder als gewinkelte Stiftleiste 2x8, deren Stecker vorne durch die Wand kommen. 3D-Vorschau mit bestueckter Platine: `hardware/gehaeuse/Gehaeuse3D_Vorschau.html` und `hardware/gehaeuse/Gehaeuse3D_Vorschau_gewinkelt.html`.
 - `docs/`: Projektbeschreibung als DOCX.
 
 ## Stand
