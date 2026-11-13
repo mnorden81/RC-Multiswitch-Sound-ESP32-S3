@@ -292,8 +292,16 @@ static void    luaSetSpdSrc(uint8_t, uint8_t v) {
     uint8_t nr = spdNr(scfg.Source_Speed_Sound_0);
     scfg.Source_Speed_Sound_0 = setSpd(v == 0 ? 0 : 2, nr); soundMarkDirty();
 }
+// Gesperrtes Kanal-Feld: bleibt ein Zahlenfeld mit festem Wert (min = max).
+// Wuerde es zum Info-Feld ("Deaktiviert"), laedt das ELRS-Lua-Skript es nach
+// einer Aenderung der Quelle nicht neu (es laedt nur Zahlen-/Auswahlfelder
+// nach) - der Kanal liess sich dann erst nach Verlassen des Menues aendern.
+static void luaLockChannel(LuaView& v) {
+    if (v.value < 1 || v.value > 16) v.value = 1;
+    v.min = v.max = v.value;
+}
 static void luaShowSpdChannel(uint8_t, LuaView& v, char*) {
-    if (spdTyp(scfg.Source_Speed_Sound_0) != 0) { v.type = LUA_INFO; v.name = "Kanal Speed"; v.text = "Deaktiviert"; }
+    if (spdTyp(scfg.Source_Speed_Sound_0) != 0) luaLockChannel(v);
 }
 static uint8_t luaGetSpdChannel(uint8_t)            { return spdNr(scfg.Source_Speed_Sound_0); }
 static void    luaSetSpdChannel(uint8_t, uint8_t v) { scfg.Source_Speed_Sound_0 = setSpd(spdTyp(scfg.Source_Speed_Sound_0), v); soundMarkDirty(); }
@@ -305,9 +313,7 @@ static void luaShowChannel(uint8_t s, LuaView& v, char*) {
     uint8_t t = einTyp(scfg.Source_Start_Sound[s]);
     bool noPin = (t == 2 || t == 3 || t == 4);
     if (t == 7 || t == 8 || noPin) {
-        v.type = LUA_INFO;
-        if (s == 0) { v.name = "Kanal EIN"; v.text = (t == 7 || noPin) ? "Dauerbetrieb/Deakt." : "Deaktiviert"; }
-        else        { v.text = (t == 7) ? "Dauerbetrieb" : "Deaktiviert"; }
+        luaLockChannel(v);   // Dauerbetrieb/Aus/kein Pin: Kanal gesperrt
     } else {
         v.max = einMaxNr(t);
     }

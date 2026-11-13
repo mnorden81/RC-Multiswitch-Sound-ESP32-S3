@@ -86,7 +86,9 @@
 #include "src/RC_Common/config_backup.h"   // v4.06
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
 
-constexpr uint16_t Version = 101; // 1.01 - CRSF Parameter Version Number
+constexpr uint16_t Version = 102; // 1.02 - CRSF Parameter Version Number
+// v1.02: Lua: Sound-Kanal-Felder bleiben bei Aus/Dauer Zahlenfelder (gesperrt)
+//        statt Info "Deaktiviert" - sonst erst nach Menue-Verlassen aenderbar.
 uint16_t fwVersion() { return Version; }   // fuer sound_web.cpp
 
 // ======== SBUS-Schwellen (benannte Konstanten) ==================
