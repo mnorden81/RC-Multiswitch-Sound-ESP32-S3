@@ -1,4 +1,4 @@
-# Firmware RC-Multiswitch-Sound v1.01
+# Firmware RC-Multiswitch-Sound v1.02
 
 Arduino-Sketch `RC_Multiswitch_Sound/` fuer die Platine v0.9 mit ESP32-S3-DevKitC-1 N16R8. Nicht auf Hardware getestet.
 
