@@ -1,5 +1,5 @@
 /*
-    RC-Multiswitch-Sound  v1.05  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
+    RC-Multiswitch-Sound  v1.06  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
 
  /////Projektbeschreibung////
  8-Kanal-Schaltmodul und Soundmodul in einer Firmware. Reine
@@ -25,6 +25,10 @@
    0 = FrSky   1 = FlySky   2 = ELRS normiert (SBUS)   3 = HoTT (SBUS)
    4 = CRSF (ExpressLRS / TBS CrossFire, bidirektional)
  Lua-Konfiguration und Modulkette gibt es nur bei CRSF.
+
+ NEU v1.06: Lua zeigt das RC-System nur noch an ("ELRS CRSF (Web aendern)").
+   Umstellen auf SBUS per Lua haette das Lua abgeschaltet, das geht jetzt
+   nur noch in der Web-UI. SBUS-Felder sind im Lua weiter ausgeblendet.
 
  NEU v1.05: Lua-Menue uebersichtlicher (RC_Common 1.3.0):
    - Lange Auswahlfelder (RC-System, Ausgang-Quelle, UART-Baudrate) kommen
@@ -70,7 +74,7 @@
  Lua-Felder:
      0-85   wie RC-Multiswitch v4.06 (Global, Ausgang 1-8, WLAN, UART B/C)
     86-98   Ordner "Motor" (wie Sound-Basis Felder 2-14)
-    99-110  Ordner "Einstellungen": 100 Sound-Adresse, 101 RC-System,
+    99-110  Ordner "Einstellungen": 100 Sound-Adresse, 101 RC-System (Anzeige),
             102/103 Einkanal Kanal/Mode (Sounds, SBUS), 104/105
             Gruppenadresse 1/2, 106-109 SBUS-Gruppen, 110 WLAN jetzt
    111      Geraetename (Info)
@@ -108,7 +112,8 @@
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
 #include "usb_drive.h"                      // v1.04: SD-Karte als USB-Laufwerk
 
-constexpr uint16_t Version = 105; // 1.05 - CRSF Parameter Version Number
+constexpr uint16_t Version = 106; // 1.06 - CRSF Parameter Version Number
+// v1.06: Lua: RC-System nur Anzeige (Umstellen nur in der Web-UI).
 // v1.05: Lua: Chunk-Fix (RC_Common 1.3.0), Werte in Ordnernamen, unpassende Felder ausgeblendet.
 // v1.04: SD-Karte als USB-Laufwerk am PC (usb_drive.cpp, USB Mode "USB-OTG (TinyUSB)").
 // v1.03: Lua: "PWM Festwert" bleibt bei PWM Modus MWprop ein Zahlenfeld (gesperrt) statt Info-Feld - sonst erst nach Menue-Verlassen einstellbar.
@@ -856,8 +861,13 @@ static void luaShowSettingsFolder(uint8_t, LuaView& v, char* buf) {
     snprintf(buf, LUA_VIEW_BUF, "Einstellungen (%s)", RC_SYS_NAMES[constrain(RC_System, 0, 4)]);
     v.name = buf;
 }
-static uint8_t luaGetRcSystem(uint8_t)              { return (uint8_t)constrain(RC_System, 0, 4); }
-static void    luaSetRcSystem(uint8_t, uint8_t v)   { RC_System = v; nvsSave(); }   // wirkt nach Neustart
+// v1.06: RC-System im Lua nur noch als Anzeige. Umstellen auf SBUS per Lua
+// haette das Lua selbst abgeschaltet (Lua gibt es nur bei CRSF), zurueck
+// ging es dann nur ueber die Web-UI. Umstellen jetzt nur in der Web-UI.
+static void luaShowRcSystem(uint8_t, LuaView& v, char* buf) {
+    snprintf(buf, LUA_VIEW_BUF, "%s (Web aendern)", RC_SYS_NAMES[constrain(RC_System, 0, 4)]);
+    v.text = buf;
+}
 static uint8_t luaGetGroupAdr(uint8_t a)            { return (uint8_t)constrain(EK_Gruppen_Adresse[a], 0, 255); }
 static void    luaSetGroupAdr(uint8_t a, uint8_t v) { EK_Gruppen_Adresse[a] = v; nvsSave(); }
 static uint8_t luaGetSbusGrpCh(uint8_t a)           { int c = SBUS_Gruppen_Channel[a]; return c == 999 ? 255 : (uint8_t)constrain(c, 0, 15); }
@@ -897,7 +907,7 @@ static void buildLuaMenu() {
     LuaMenu& m = luaMenu;
     m.clear();
     m.folder(0, 0, "");
-    m.info(1, 0, "Version", "v1.05 " BOARD_NAME);
+    m.info(1, 0, "Version", "v1.06 " BOARD_NAME);
     m.folder(2, 0, "Global")->view = luaShowGlobalFolder;
     m.u8(3, 2, "Switch Addr", 0, 20, "", luaGetAddr, luaSetAddr);
     m.u8(4, 2, "SBUS EK Kanal", 0, 15, "", luaGetCrsfCh, luaSetCrsfCh)->view = luaHideSbusOnly;
@@ -939,7 +949,7 @@ static void buildLuaMenu() {
     soundLuaMotor(m, 86);                                     // 86-98
     m.folder(99, 0, "Einstellungen")->view = luaShowSettingsFolder;
     m.u8(100, 99, "Sound-Adresse", 0, 20, "", sndLuaGetAddr, sndLuaSetAddr);
-    m.select(101, 99, "RC-System (Neustart)", "FrSky;FlySky;ELRS SBUS;Hott;ELRS CRSF", luaGetRcSystem, luaSetRcSystem);
+    m.info(101, 99, "RC-System", "")->view = luaShowRcSystem;   // v1.06: nur Anzeige
     m.u8(102, 99, "Sound EK Kanal (255=aus)", 0, 255, "", sndLuaGetEkChannel, sndLuaSetEkChannel)->view = luaHideSbusOnly;
     m.select(103, 99, "Sound EK Mode", WM_MODES, sndLuaGetEkMode, sndLuaSetEkMode)->view = luaHideSbusOnly;
     m.u8(104, 99, "Gruppenadr. 1 (255=aus)", 0, 255, "", luaGetGroupAdr, luaSetGroupAdr, 0);
