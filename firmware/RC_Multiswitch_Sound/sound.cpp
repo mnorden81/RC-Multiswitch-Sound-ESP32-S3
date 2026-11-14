@@ -298,8 +298,25 @@ static int einSelWrite(uint8_t val, int oldCfg) {
     return setEin(t, einNr(oldCfg));
 }
 
+// v1.05: Quelle steht im Ordnernamen, z. B. "Sound 3 (L 5)", "Motor (Aus)"
+// (wie ELRS selbst, z. B. "TX Power (100mW)"). Das ELRS-Lua laedt den
+// Ordner nach einer Aenderung darin neu, der Name ist dann aktuell.
+static void luaSourceText(int cfg, char* out, size_t len) {
+    static const char* const N[] = {"L", "H", "EK", "MKan", "Dauer", "Aus"};
+    uint8_t sel = einSelVal(cfg);
+    if (sel <= 3) snprintf(out, len, "%s %d", N[sel], einNr(cfg));
+    else          snprintf(out, len, "%s", N[sel < 6 ? sel : 5]);
+}
 static void luaShowSoundFolder(uint8_t s, LuaView& v, char* buf) {
-    snprintf(buf, LUA_VIEW_BUF, "Sound %d", s);
+    char src[12];
+    luaSourceText(scfg.Source_Start_Sound[s], src, sizeof(src));
+    snprintf(buf, LUA_VIEW_BUF, "Sound %d (%s)", s, src);
+    v.name = buf;
+}
+static void luaShowMotorFolder(uint8_t, LuaView& v, char* buf) {
+    char src[12];
+    luaSourceText(scfg.Source_Start_Sound[0], src, sizeof(src));
+    snprintf(buf, LUA_VIEW_BUF, "Motor (%s)", src);
     v.name = buf;
 }
 
@@ -328,9 +345,12 @@ static void    luaSetSpdSrc(uint8_t, uint8_t v) {
 // Wuerde es zum Info-Feld ("Deaktiviert"), laedt das ELRS-Lua-Skript es nach
 // einer Aenderung der Quelle nicht neu (es laedt nur Zahlen-/Auswahlfelder
 // nach) - der Kanal liess sich dann erst nach Verlassen des Menues aendern.
+// v1.05: zusaetzlich ausgeblendet (CRSF hidden, Typ bleibt Zahl). Ein Lua
+// ohne hidden-Unterstuetzung zeigt das gesperrte Feld wie bisher.
 static void luaLockChannel(LuaView& v) {
     if (v.value < 1 || v.value > 16) v.value = 1;
     v.min = v.max = v.value;
+    v.hidden = true;
 }
 static void luaShowSpdChannel(uint8_t, LuaView& v, char*) {
     if (spdTyp(scfg.Source_Speed_Sound_0) != 0) luaLockChannel(v);
@@ -369,7 +389,8 @@ uint8_t sndLuaGetEkMode(uint8_t)              { int m = scfg.Einkanal_mode; retu
 void    sndLuaSetEkMode(uint8_t, uint8_t v)   { scfg.Einkanal_mode = (v == 0) ? 0 : constrain((int)v + 9, 10, 13); soundMarkDirty(); }
 
 void soundLuaMotor(LuaMenu& m, uint8_t f) {
-    m.folder(f, 0, "Motor");
+    LuaItem* fo = m.folder(f, 0, "Motor");
+    if (fo) { fo->arg = 0; fo->view = luaShowMotorFolder; }
     m.select(f + 1,  f, "Motor Mode", "Eine Richtung;Zwei Richtungen", luaGetThrottleMode, luaSetThrottleMode);
     m.select(f + 2,  f, "Motor EIN Modus", "Normal;Toggle", luaGetToggle, luaSetToggle);
     m.select(f + 3,  f, "Quelle Motor", EIN_SEL, luaGetSource, luaSetSource, 0);
