@@ -106,12 +106,14 @@ GitHub baut die Firmware bei jeder Änderung automatisch (Workflow „Firmware b
    |---|---|
    | Board | **ESP32S3 Dev Module** |
    | USB CDC On Boot | **Enabled** |
+   | USB Mode | **USB-OTG (TinyUSB)** (ab v1.04, für die SD-Karte als USB-Laufwerk; mit „Hardware CDC and JTAG“ läuft alles außer dem Laufwerk) |
+   | Upload Mode | **USB-OTG CDC (TinyUSB)** (beim Hochladen über die Buchse „USB“) |
    | Flash Size | 4MB (32Mb) |
    | Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)** |
    | PSRAM | **Disabled** |
    | Erase All Flash Before Sketch Upload | **Disabled** (sonst sind die Einstellungen weg) |
 
-4. ESP32-S3-DevKitC-1 mit einem USB-**Datenkabel** an den PC stecken (Buchse „USB“ oder „UART“, beide gehen). Für die Buchse „UART“ braucht Windows evtl. den Treiber für den USB-Seriell-Chip (CP210x oder CH343). Dann unter **Werkzeuge → Port** den neuen COM-Port wählen.
+4. ESP32-S3-DevKitC-1 mit einem USB-**Datenkabel** an der Buchse **USB** an den PC stecken (die Buchse „UART“ geht auch, braucht aber evtl. den Treiber für den USB-Seriell-Chip CP210x oder CH343). Dann unter **Werkzeuge → Port** den neuen COM-Port wählen. Hinweis: Läuft die Firmware ab v1.04 (TinyUSB), bekommt das Modul eine andere COM-Port-Nummer als im Flash-Modus. Nach dem Hochladen also ggf. den Port neu wählen.
 5. Auf den Pfeil **Hochladen** klicken. Am Ende steht „Hard resetting via RTS pin…“.
 6. Das Modul startet von selbst neu. Wenn nicht: USB-Kabel kurz abziehen und wieder einstecken.
 
