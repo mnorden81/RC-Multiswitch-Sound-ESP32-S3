@@ -36957,6 +36957,18 @@
 			)
 		)
 	)
+	(gr_text "+"
+		(at 160.03 119.89 0)
+		(layer "F.SilkS")
+		(uuid "2d9b24d2-1fef-45cf-bccf-d29237b74e34")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+			(justify left)
+		)
+	)
 	(gr_text "LED2"
 		(at 242.5 91.85 0)
 		(layer "F.SilkS")
@@ -37240,6 +37252,17 @@
 				(bold yes)
 			)
 			(justify left bottom)
+		)
+	)
+	(gr_text "-"
+		(at 160.67 115.09 90)
+		(layer "F.SilkS")
+		(uuid "fbf221d4-81f3-4295-981e-893b9d39c7c0")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
 		)
 	)
 	(segment
