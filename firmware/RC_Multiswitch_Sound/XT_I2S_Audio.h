@@ -39,6 +39,14 @@ extern bool g_audioDebug;
 bool sdMutexTake(uint32_t timeoutMs = 2000);
 void sdMutexGive();
 
+// v1.04 USB-Laufwerk (usb_drive.cpp): Solange der PC die SD-Karte als
+// Laufwerk benutzt, darf die Firmware das Dateisystem nicht anfassen.
+// sdUsbLock(true) wartet einen laufenden SD-Zugriff ab und sperrt danach:
+// sdMutexTake() liefert false (Web: "sd_busy") und OpenWavFile() oeffnet
+// keine Datei. sdUsbLocked() fragt den Zustand ab.
+void sdUsbLock(bool on);
+bool sdUsbLocked();
+
 class XT_Envelope_Class; // forward ref for this class
 
 //------------------------------------------------------------------------------------------------------------------------

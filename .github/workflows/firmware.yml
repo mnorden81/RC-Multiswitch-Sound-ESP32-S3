@@ -42,11 +42,19 @@ jobs:
           arduino-cli core install esp32:esp32@${{ matrix.core }}
           arduino-cli lib install "Bolder Flight Systems SBUS@8.1.4"
           arduino-cli lib install "TinyGPSPlus@1.0.3"
-      - name: Kompilieren (ESP32-S3, Minimal SPIFFS mit OTA)
+      # v1.04: USB Mode = USB-OTG (TinyUSB), damit die SD-Karte am PC als
+      # Laufwerk erscheint (usb_drive.cpp)
+      - name: Kompilieren (ESP32-S3, Minimal SPIFFS mit OTA, USB-OTG)
         run: |
-          arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,PartitionScheme=min_spiffs" \
+          arduino-cli compile --fqbn "esp32:esp32:esp32s3:USBMode=default,CDCOnBoot=cdc,PartitionScheme=min_spiffs" \
             --warnings default --output-dir build/S3 firmware/RC_Multiswitch_Sound
           ls -l build/S3
+      # Gegenprobe: alte Einstellung (Hardware CDC) baut weiter, ohne Laufwerk
+      - name: Kompilieren (Gegenprobe USB Mode Hardware CDC)
+        if: matrix.core == '3.0.7'
+        run: |
+          arduino-cli compile --fqbn "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,PartitionScheme=min_spiffs" \
+            --warnings default --output-dir build/hwcdc firmware/RC_Multiswitch_Sound
       - uses: actions/upload-artifact@v4
         if: matrix.core == '3.0.7'
         with:
