@@ -67,6 +67,10 @@ void soundSetupEarly();        // SD-Karte, Motor-Dateien (vor dem WLAN-Start)
 void soundSetupLate();         // SD-Lese-Task, Sample-Puffer (nach dem WLAN-Start)
 void soundLoop();
 
+// v1.04 USB-Laufwerk (usb_drive.cpp): Karte an den PC abgeben / zurueckholen
+void soundStorageRelease();    // Sounds stoppen, Dateien schliessen, SD sperren
+void soundStorageReload();     // SD neu einbinden, Sperre aufheben, Motor-Dateien laden
+
 // Einkanal-Sounds (Quelle "EK", 70-77)
 void soundOnSwitchBits(uint8_t addr, uint8_t bits);  // CRSF, WM-Protokoll
 void soundOnSbus(uint16_t ch);                       // SBUS, Kanal scfg.Einkanal_Channel

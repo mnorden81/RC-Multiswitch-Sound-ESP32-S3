@@ -203,6 +203,38 @@ void soundSetupEarly() {
     LoadFiles();
 }
 
+// ======== v1.04: SD-Karte als USB-Laufwerk (usb_drive.cpp) ===========
+// Vor dem Freigeben an den PC: alle Sounds stoppen, alle Dateien schliessen
+// und das Dateisystem sperren (sdUsbLock). Danach liest/schreibt nur noch der
+// PC die Karte, sektorweise ueber SD.readRAW()/writeRAW().
+void soundStorageRelease() {
+    I2SAudio.StopAllSounds();
+    for (uint8_t i = 1; i < SND_NUM_SLOTS; i++) {
+        XT_Wav_Class* s = Sounds[i];
+        if (!s) continue;
+        s->RepeatForever = false;
+        s->UnLoadWavFile();
+        Sound_play[i] = false; Sound_on_web[i] = false; testSoundActive[i] = false;
+    }
+    Sound_loop.RepeatForever = false;
+    Sound_loop.UnLoadWavFile(); Sound_shut.UnLoadWavFile(); Sound_start.UnLoadWavFile();
+    Sound_play[0] = false; Sound_on_web[0] = false; testSoundActive[0] = false;
+    engine_State = ENG_OFF; engine_break = false;
+    throttle = 0; last_throttle = 0;
+    sdUsbLock(true);
+}
+
+// Nach dem Auswerfen/Abziehen: Karte neu einbinden (der PC kann Dateien
+// geaendert haben, der alte FAT-Zwischenspeicher des ESP32 ist dann falsch),
+// Sperre aufheben und die Motor-Dateien neu laden. Laufende Schalter starten
+// ihre Sounds danach von selbst wieder (soundLoop()).
+void soundStorageReload() {
+    SD.end();
+    SDCardInit();
+    sdUsbLock(false);
+    LoadFiles();
+}
+
 void soundSetupLate() {
     // SD-Lese-Task und Puffer bewusst erst nach dem WLAN-AP-Start (Sound-Basis)
     I2SAudio.StartSdReaderTask();
@@ -422,6 +454,7 @@ static void evalSources() {
 }
 
 void soundLoop() {
+    if (sdUsbLocked()) return;   // v1.04: SD-Karte ist als USB-Laufwerk am PC
     currentTime = millis();
     evalSources();
     if(currentTime<5000) return;   // 5 s Startverzoegerung wie Sound-Basis
