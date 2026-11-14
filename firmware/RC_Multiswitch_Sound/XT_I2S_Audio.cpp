@@ -38,7 +38,17 @@ static volatile uint32_t s_sdUnderrunCount = 0;
 // Siehe Erklaerung in XT_I2S_Audio.h - erlaubt WebServerManager.cpp,
 // denselben Mutex wie der Audio-Player zu nehmen, bevor es fuer das
 // Konfigurations-Backup selbst auf die SD-Karte zugreift.
+static volatile bool s_sdUsbLock = false;   // v1.04: SD-Karte gehoert gerade dem PC
+
+void sdUsbLock(bool on) {
+    if (sdMutex) xSemaphoreTake(sdMutex, portMAX_DELAY);
+    s_sdUsbLock = on;
+    if (sdMutex) xSemaphoreGive(sdMutex);
+}
+bool sdUsbLocked() { return s_sdUsbLock; }
+
 bool sdMutexTake(uint32_t timeoutMs) {
+    if (s_sdUsbLock) return false;   // v1.04: Karte ist als USB-Laufwerk am PC
     if (!sdMutex) return true; // noch nicht angelegt -> noch kein Sound geladen, kein Konflikt moeglich
     return xSemaphoreTake(sdMutex, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
 }
@@ -297,6 +307,14 @@ void XT_Wav_Class::DumpWAVHeader(WavHeader_Struct *Wav)
 bool XT_Wav_Class::OpenWavFile()
 {
     if (sdMutex) xSemaphoreTake(sdMutex, portMAX_DELAY);
+    // v1.04: Karte ist als USB-Laufwerk am PC - keine Datei oeffnen
+    if (s_sdUsbLock)
+    {
+        if (WavFile) WavFile.close();
+        FileOK = false;
+        if (sdMutex) xSemaphoreGive(sdMutex);
+        return false;
+    }
     // v7.09 Bugfix: falls WavFile von einem frueheren LoadWavFile() noch
     // offen ist (z.B. wenn LoadWavFile() zweimal hintereinander aufgerufen
     // wird, ohne dass dazwischen UnLoadWavFile() lief), hier defensiv erst

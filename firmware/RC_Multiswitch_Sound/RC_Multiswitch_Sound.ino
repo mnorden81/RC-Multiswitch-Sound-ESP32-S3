@@ -1,5 +1,5 @@
 /*
-    RC-Multiswitch-Sound  v1.01  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
+    RC-Multiswitch-Sound  v1.04  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
 
  /////Projektbeschreibung////
  8-Kanal-Schaltmodul und Soundmodul in einer Firmware. Reine
@@ -25,6 +25,12 @@
    0 = FrSky   1 = FlySky   2 = ELRS normiert (SBUS)   3 = HoTT (SBUS)
    4 = CRSF (ExpressLRS / TBS CrossFire, bidirektional)
  Lua-Konfiguration und Modulkette gibt es nur bei CRSF.
+
+ NEU v1.04: SD-Karte als USB-Laufwerk (usb_drive.cpp). Buchse "USB" an
+   einen PC: die Karte erscheint als Laufwerk, Sounds per Explorer kopieren.
+   Solange das Laufwerk am PC haengt, ist der Sound pausiert; "Auswerfen"
+   oder Abziehen gibt die Karte ans Modul zurueck. Braucht in der Arduino
+   IDE Werkzeuge > USB Mode = "USB-OTG (TinyUSB)" (sonst ohne Laufwerk).
 
  NEU v1.01: baut auch mit esp32-Core 3.3.x (BOOT_PIN heisst jetzt
    BOOT_BTN_PIN, weil der neue Core BOOT_PIN selbst definiert).
@@ -85,8 +91,11 @@
 #include "src/RC_Common/web_common.h"
 #include "src/RC_Common/config_backup.h"   // v4.06
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
+#include "usb_drive.h"                      // v1.04: SD-Karte als USB-Laufwerk
 
-constexpr uint16_t Version = 102; // 1.02 - CRSF Parameter Version Number
+constexpr uint16_t Version = 104; // 1.04 - CRSF Parameter Version Number
+// v1.04: SD-Karte als USB-Laufwerk am PC (usb_drive.cpp, USB Mode "USB-OTG (TinyUSB)").
+// v1.03: Lua: "PWM Festwert" bleibt bei PWM Modus MWprop ein Zahlenfeld (gesperrt) statt Info-Feld - sonst erst nach Menue-Verlassen einstellbar.
 // v1.02: Lua: Sound-Kanal-Felder bleiben bei Aus/Dauer Zahlenfelder (gesperrt)
 //        statt Info "Deaktiviert" - sonst erst nach Menue-Verlassen aenderbar.
 uint16_t fwVersion() { return Version; }   // fuer sound_web.cpp
@@ -777,10 +786,13 @@ static void luaViewPwmModus(uint8_t, LuaView& v, char*) {
 }
 static uint8_t luaGetPwm(uint8_t x)            { return (uint8_t)pwm_wert[x]; }
 static void    luaSetPwm(uint8_t x, uint8_t v) { pwm_wert[x] = v; nvsSave(); }
-static void    luaViewPwm(uint8_t x, LuaView& v, char* buf) {
+// Bei MWprop bleibt "PWM Festwert" ein Zahlenfeld, nur gesperrt (min = max).
+// Als Info-Feld wuerde es das ELRS-Lua-Skript nach dem Zurueckstellen auf
+// "Festwert" nicht neu laden (es laedt nur Zahlen-/Auswahlfelder nach) - der
+// Festwert liess sich dann erst nach Verlassen des Menues einstellen.
+static void    luaViewPwm(uint8_t x, LuaView& v, char*) {
     if (getPwmModus(x) != 1) return;
-    snprintf(buf, LUA_VIEW_BUF, "MWprop Kanal %d (auto)", x + 1);
-    v.type = LUA_INFO; v.name = "PWM Wert"; v.text = buf;
+    v.min = v.max = v.value;
 }
 static uint8_t luaGetTest(uint8_t)             { return 0; }
 static void    luaSetTest(uint8_t x, uint8_t v) {
@@ -1107,6 +1119,7 @@ void setup() {
     soundSetupEarly();
     webui_init();
     soundSetupLate();
+    usbDriveBegin();     // v1.04: SD-Karte als USB-Laufwerk
 
     Serial.printf("RC-Multiswitch-Sound %s v%d.%02d\n", BOARD_NAME, Version / 100, Version % 100);
     Serial.printf("SSID: %s\n", g_wifi_ssid);
@@ -1123,6 +1136,7 @@ void loop() {
     // v1.00: Soundteil am Loop-Anfang, damit ihn der SBUS-Failsafe-Fruehausstieg
     // unten nicht ueberspringt (BUS_OK/Kanaele aus dem letzten Durchlauf)
     soundSavePending();
+    usbDriveLoop();      // v1.04: vor soundLoop(), gibt die SD-Karte ab/zurueck
     soundLoop();
 
     if (RC_System_boot == 4) {
