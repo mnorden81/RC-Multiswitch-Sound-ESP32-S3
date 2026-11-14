@@ -56,6 +56,7 @@ Reine Zusammenfuehrung von zwei bestehenden Firmwares:
 Neu gegenueber den Basis-Firmwares (Entscheidungen 21.-28.10.2026):
 - Zwei Adressen: Schalt-Adresse (Ausgaenge, zugleich CRSF-Geraeteadresse) und Sound-Adresse (Einzelkanal-Sounds). Gleiche Zahl = dieselben Schalter schalten beides.
 - Status-LED in der Web-UI waehlbar: IO48 (DevKitC-1 v1.0, Vorgabe) oder IO38 (v1.1).
+- Lua-Menue: Ordner zeigen ihren aktuellen Wert (z. B. „Ausgang 1 (Kanal_L 5)“, „Einstellungen (ELRS CRSF)“), Felder ohne Wirkung werden ausgeblendet (z. B. reine SBUS-Felder, Blinkzeiten bei Dauerlicht). Reihenfolge im Hauptmenü: Version, Global, Ausgang 1–8, WLAN, UART B/C, Motor, Einstellungen, Gerätename, Sound 1–n.
 - Lua-Menue zeigt die ersten 8 Sounds, in der Web-UI auf bis zu 23 erhoehbar (Grenze: 255 Lua-Felder). In der Web-UI sind immer alle 24 Sounds einstellbar.
 - Eigener Name je Sound und je Ausgang (16 Zeichen), Vorgabe "Sound N" bzw. "Ausgang N".
 
@@ -137,7 +138,7 @@ Schlägt das Update fehl, läuft die alte Firmware einfach weiter. Das Modul bei
 
 ## Stand
 - Hardware: Schaltplan v0.8, PCB in Arbeit. ERC-Stand v0.3 (hardware/ERC.rpt): 1 Fehler (IO8 unbeschaltet, seit v0.4 mit No-Connect-Flag, plus Rest-Leitungsstueck entfernt) und 55 Warnungen (Bibliotheksversionen "power"/"Device"/"local", harmlos). Nach v0.8 ERC neu ausfuehren.
-- Firmware: v1.03 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22), baut in GitHub Actions, auf Hardware noch nicht getestet.
+- Firmware: v1.05 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü), baut in GitHub Actions, auf Hardware noch nicht getestet.
 
 ## Offene Punkte
 - R1-R16 vom Anwender je LED bzw. Verbraucher auslegen (3S, ca. 11-12 V); Helligkeit schwankt mit dem Ladezustand.
