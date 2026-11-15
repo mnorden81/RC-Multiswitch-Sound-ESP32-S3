@@ -55,7 +55,7 @@ Reine Zusammenfuehrung von zwei bestehenden Firmwares:
 
 Neu gegenueber den Basis-Firmwares (Entscheidungen 21.-28.10.2026):
 - Zwei Adressen: Schalt-Adresse (Ausgaenge, zugleich CRSF-Geraeteadresse) und Sound-Adresse (Einzelkanal-Sounds). Gleiche Zahl = dieselben Schalter schalten beides.
-- Status-LED in der Web-UI waehlbar: IO48 (DevKitC-1 v1.0, Vorgabe) oder IO38 (v1.1).
+- Status-LED in der Web-UI waehlbar: IO48 (DevKitC-1 v1.0, Vorgabe) oder IO38 (v1.1). Ab v1.08 dasselbe Farbschema wie alle Module: grün langsam = OK, rot schnell = Failsafe / kein RC-Link, rot Aufblitzen (kurz alle 1 s) = kein Signal, blau Doppelblitz = doppelte Moduladresse, violett statt grün/rot = WLAN an. Rot und Grün vertauscht? Lua Global > „LED Farbfolge“ umstellen (Vorgabe GRB).
 - Lua-Menue: Ordner zeigen ihren aktuellen Wert (z. B. „Ausgang 1 (Kanal_L 5)“, „Einstellungen (ELRS CRSF)“), Felder ohne Wirkung werden ausgeblendet (z. B. reine SBUS-Felder, Blinkzeiten bei Dauerlicht). Das RC-System wird im Lua nur angezeigt, umstellen geht in der Web-UI. Reihenfolge im Hauptmenü: Version, Global, Ausgang 1–8, WLAN, UART B/C, Motor, Einstellungen, Gerätename, Sound 1–n.
 - Lua-Menue zeigt die ersten 8 Sounds, in der Web-UI auf bis zu 23 erhoehbar (Grenze: 255 Lua-Felder). In der Web-UI sind immer alle 24 Sounds einstellbar.
 - Eigener Name je Sound und je Ausgang (16 Zeichen), Vorgabe "Sound N" bzw. "Ausgang N".
@@ -123,7 +123,7 @@ GitHub baut die Firmware bei jeder Änderung automatisch (Workflow „Firmware b
 ### Weg 3: Update per WLAN (OTA)
 
 1. Die Datei `RC_Multiswitch_Sound.ino.bin` besorgen: aus GitHub (Weg 1, Schritte 1–4) oder in der Arduino IDE mit **Sketch → Kompilierte Binärdatei exportieren** (liegt dann im Sketch-Ordner unter `build/`). Nicht die `.merged.bin` nehmen.
-2. WLAN des Moduls einschalten: BOOT-Taste 3 s halten (oder Lua „WLAN jetzt“ bzw. automatisch ohne RC-Signal). Name **MultiSwitch**, Passwort `123456789` (falls nicht geändert).
+2. WLAN des Moduls einschalten: BOOT-Taste 2 s halten (oder Lua „WLAN jetzt“ bzw. automatisch ohne RC-Signal). Name **MultiSwitch**, Passwort `123456789` (falls nicht geändert).
 3. Mit Handy oder PC in dieses WLAN gehen und im Browser http://192.168.1.1 öffnen.
 4. Reiter **WiFi**, Karte **Firmware-Update (OTA)**: die `.bin`-Datei auswählen und hochladen. Das Modul startet danach neu, die Einstellungen bleiben erhalten.
 
@@ -146,7 +146,7 @@ Hochgeladene WAV-Dateien behalten ihren Namen. Umlaute werden ersetzt (ä → ae
 
 ## Stand
 - Hardware: Schaltplan v0.8, PCB in Arbeit. ERC-Stand v0.3 (hardware/ERC.rpt): 1 Fehler (IO8 unbeschaltet, seit v0.4 mit No-Connect-Flag, plus Rest-Leitungsstueck entfernt) und 55 Warnungen (Bibliotheksversionen "power"/"Device"/"local", harmlos). Nach v0.8 ERC neu ausfuehren.
-- Firmware: v1.07 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü, Sound-Dateien mit eigenem Namen und Zuordnung per Auswahlliste), baut in GitHub Actions, auf Hardware noch nicht getestet.
+- Firmware: v1.08 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü, Sound-Dateien mit eigenem Namen und Zuordnung per Auswahlliste, Status-LED wie alle Module), baut in GitHub Actions, auf Hardware noch nicht getestet.
 
 ## Offene Punkte
 - R1-R16 vom Anwender je LED bzw. Verbraucher auslegen (3S, ca. 11-12 V); Helligkeit schwankt mit dem Ladezustand.
