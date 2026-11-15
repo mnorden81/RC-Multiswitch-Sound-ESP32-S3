@@ -322,6 +322,13 @@ bool XT_Wav_Class::OpenWavFile()
     // gleichzeitig und verbraucht dabei unnoetig einen weiteren der knappen
     // File-Deskriptoren (siehe SDCardInit()/max_files in ESP32-RC-Sound.ino).
     if (WavFile) WavFile.close();
+    // v1.07: leerer Platz (Sound-Zuordnung "(leer)") - nichts oeffnen
+    if (FileName.length() <= 1)
+    {
+        FileOK = false;
+        if (sdMutex) xSemaphoreGive(sdMutex);
+        return false;
+    }
     WavFile = SD.open(FileName); // Open the wav file
     if (WavFile == false)
     {

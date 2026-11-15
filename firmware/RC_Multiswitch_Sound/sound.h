@@ -22,6 +22,14 @@
 static constexpr int SND_NUM_SLOTS = 25;
 static constexpr int SND_NAME_LEN  = 17;   // 16 Zeichen + Null
 
+// v1.07: Sound-Zuordnung (sound_map.h). Jede Datei behaelt ihren Namen, pro
+// Platz steht in scfg.Sound_File[], welche Datei dort spielt: 0 = Loop,
+// 1 = Standgas, 2 = Start, 3.. = Sound 1-24. Leerer Name = Platz leer.
+static constexpr int    RCSOUND_NUM_SOUNDS = SND_NUM_SLOTS - 1;
+static constexpr int    SND_FILE_SLOTS     = 3 + RCSOUND_NUM_SOUNDS;
+static constexpr size_t SND_NAME_MAX_BASE  = 40;   // SD-Karte: Name ohne ".wav"
+static constexpr size_t SND_FILE_LEN       = 48;   // >= SND_NAME_MAX_BASE + ".wav" + Null
+
 // Im Lua-Menue hoechstens 23 Sounds: das Menue hat max. 255 Eintraege mit
 // einer 8-Bit-Feld-ID (CRSF), ab Feld 112 mit je 6 Feldern endet Sound 23
 // bei Feld 249. In der Web-UI sind immer alle 24 Sounds einstellbar.
@@ -50,6 +58,10 @@ struct SoundConfig {
 
     // NEU (Entwurf 28.10.2026): eigener Name je Sound, Index 0 = Motor
     char Sound_Name[SND_NUM_SLOTS][SND_NAME_LEN];
+
+    // v1.07: Dateiname je Platz (ohne "/"), siehe SND_FILE_SLOTS oben.
+    // Werkseinstellung: loop.wav, shut.wav, start.wav, sound1.wav ...
+    char Sound_File[SND_FILE_SLOTS][SND_FILE_LEN];
 };
 
 extern SoundConfig scfg;
@@ -77,8 +89,10 @@ void soundOnSbus(uint16_t ch);                       // SBUS, Kanal scfg.Einkana
 uint16_t soundEinkanalData();
 
 bool isValidEinSource(int c);
+bool soundEngineRunning();     // v1.07: Motor laeuft (Leerlauf-Schleife)
 
-// Lua-Menue: Motor (86-98) und Sound 1..count (ab 112). Die Felder im Ordner
+// Lua-Menue: Motor (86-98) und Sound 1..count (ab 112), dahinter der Ordner
+// "Sound-Zuordnung" (v1.07, 4 Felder direkt nach dem letzten Sound). Die Felder im Ordner
 // "Einstellungen" baut der Schaltteil, die Lese-/Schreibfunktionen des
 // Soundteils stehen hier.
 void soundLuaMotor(LuaMenu& m, uint8_t folderId);
