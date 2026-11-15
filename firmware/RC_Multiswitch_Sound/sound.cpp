@@ -12,6 +12,8 @@
 #include <SPI.h>
 #include "XT_I2S_Audio.h"
 #include "board_config.h"
+#include "sound_map.h"
+#include <new>
 
 // ── Gemeinsame Werte aus dem Schaltteil (RC_Multiswitch_Sound.ino) ──────
 extern uint16_t channel_output[16];
@@ -40,6 +42,7 @@ void soundResetConfig() {
         scfg.Mode_Sound[i]         = 0;
         defaultName(i, scfg.Sound_Name[i]);
     }
+    for (int i = 0; i < SND_FILE_SLOTS; i++) soundMapDefaultName(i, scfg.Sound_File[i]);
     scfg.Source_Speed_Sound_0 = 999;
     scfg.throttle_mode        = 0;
     scfg.Min_Speed_Sound_0    = 100;
@@ -66,6 +69,16 @@ void soundLoadConfig() {
     if (p.getBytesLength("vsArr")  == sizeof(scfg.Volumen_Sound))      p.getBytes("vsArr",  scfg.Volumen_Sound,      sizeof(scfg.Volumen_Sound));
     if (p.getBytesLength("msArr")  == sizeof(scfg.Mode_Sound))         p.getBytes("msArr",  scfg.Mode_Sound,         sizeof(scfg.Mode_Sound));
     if (p.getBytesLength("names")  == sizeof(scfg.Sound_Name))         p.getBytes("names",  scfg.Sound_Name,         sizeof(scfg.Sound_Name));
+    // v1.07: Sound-Zuordnung; fehlt der Schluessel (bis v1.06), bleiben die
+    // festen Namen loop.wav ... sound24.wav aus soundResetConfig().
+    if (p.getBytesLength("sfiles") == sizeof(scfg.Sound_File)) {
+        p.getBytes("sfiles", scfg.Sound_File, sizeof(scfg.Sound_File));
+        for (int i = 0; i < SND_FILE_SLOTS; i++) {
+            scfg.Sound_File[i][SND_FILE_LEN - 1] = '\0';
+            if (scfg.Sound_File[i][0] && !soundNameOk(scfg.Sound_File[i], false))
+                scfg.Sound_File[i][0] = '\0';
+        }
+    }
     scfg.Source_Speed_Sound_0 = p.getInt("spd",  999);
     scfg.throttle_mode        = p.getInt("thrm", 0);
     scfg.Min_Speed_Sound_0    = p.getInt("minsp",100);
@@ -99,6 +112,7 @@ void soundSaveNow() {
     p.putBytes("vsArr",  scfg.Volumen_Sound,       sizeof(scfg.Volumen_Sound));
     p.putBytes("msArr",  scfg.Mode_Sound,          sizeof(scfg.Mode_Sound));
     p.putBytes("names",  scfg.Sound_Name,          sizeof(scfg.Sound_Name));
+    p.putBytes("sfiles", scfg.Sound_File,          sizeof(scfg.Sound_File));
     p.putInt("spd",  scfg.Source_Speed_Sound_0);
     p.putInt("thrm", scfg.throttle_mode);
     p.putInt("minsp",scfg.Min_Speed_Sound_0);
@@ -138,6 +152,7 @@ static unsigned long shutdown_timer       = 0;
 
 static constexpr uint8_t ENG_OFF = 0, ENG_STARTING = 1, ENG_RUNNING = 2, ENG_STOPPING = 3;
 static volatile uint8_t engine_State = ENG_OFF;
+bool soundEngineRunning() { return engine_State == ENG_RUNNING; }
 
 static uint16_t snd_einkanal_Data       = 0;   // 1 Bit/Schalter - Quelle "EK" 70-77
 static uint16_t snd_einkanal_SpeicherWM = 0;
@@ -200,6 +215,7 @@ static void AllocateSoundBuffers() {
 
 void soundSetupEarly() {
     SDCardInit();
+    soundMapApplyAll();   // v1.07: Dateinamen je Platz aus der Konfiguration
     LoadFiles();
 }
 
@@ -405,6 +421,8 @@ void soundLuaMotor(LuaMenu& m, uint8_t f) {
     m.u8(f + 12,     f, "Standgas Totband", 0, 50, "%", luaGetDeadBand, luaSetDeadBand);
 }
 
+static void soundLuaMap(LuaMenu& m, uint8_t first);   // v1.07, weiter unten
+
 // Sound s (1..count): Ordner fi = 112 + (s-1)*6, Felder fi+1 .. fi+5
 void soundLuaSounds(LuaMenu& m, uint8_t count) {
     if (count > SND_LUA_MAX) count = SND_LUA_MAX;
@@ -419,6 +437,96 @@ void soundLuaSounds(LuaMenu& m, uint8_t count) {
         m.select(fi + 4, fi, "Wiedergabe Mode", "Normal;Loop;Tippbetrieb", luaGetPlayMode, luaSetPlayMode, s);
         m.select(fi + 5, fi, "Test Sound", "Aus;Ein", luaGetTest, luaSetTest, s);
     }
+    // v1.07: Sound-Zuordnung direkt dahinter (bei 23 Sounds Felder 250-253),
+    // damit die Feld-IDs lueckenlos bleiben
+    soundLuaMap(m, SND_LUA_FIRST_ID + count * 6);
+}
+
+// ── Sound-Zuordnung (v1.07, Felder direkt nach dem letzten Sound) ───────────────────────────────
+// "Platz" waehlt nur aus, welcher Platz gerade bearbeitet wird (nicht
+// gespeichert). "Datei" zeigt die Dateien im Sound-Speicher als
+// Auswahlliste: "(leer)", dann die aktuelle Datei des Platzes, dann die
+// uebrigen alphabetisch. Namen auf 12 Zeichen gekuerzt. Die Liste wird bei
+// jedem Abruf neu gelesen; get/set rechnen mit derselben Liste, solange sich
+// zwischen Anzeige und Schreiben nichts an den Dateien aendert. Neue
+// Dateien erscheinen am Sender nach erneutem Oeffnen des Menues. Das ELRS-
+// Lua laedt "Datei" und "Groesse" neu, wenn "Platz" geaendert wird.
+static uint8_t luaMapSlot = 3;   // Sound 1
+static char    luaSlotOpts[240];   // 27 Plaetze, ca. 227 Zeichen
+static constexpr size_t LUA_FILE_OPTS_MAX = 200;   // RC_Common sendet hoechstens 256 Byte je Feld
+static constexpr int    LUA_FILE_MAX      = 20;
+static char    luaFileOpts[LUA_FILE_OPTS_MAX + 16];
+static char    luaFileNames[LUA_FILE_MAX][SND_FILE_LEN];
+static uint8_t luaFileCount = 0;   // ohne "(leer)"
+
+static void luaBuildFileList() {
+    // Liste nur kurz auf dem Heap (statisch waeren es 2,5 KB dauerhaft weniger
+    // Heap fuer den WLAN-Start)
+    SoundFileInfo* files = new (std::nothrow) SoundFileInfo[SND_LIST_MAX];
+    int n = files ? soundListFiles(files, SND_LIST_MAX) : 0;
+    const char* cur = scfg.Sound_File[luaMapSlot];
+    luaFileCount = 0;
+    size_t len = snprintf(luaFileOpts, sizeof(luaFileOpts), "(leer)");
+    auto add = [&](const char* name) {
+        if (luaFileCount >= LUA_FILE_MAX) return;
+        char shortName[16];
+        size_t nl = strlen(name);
+        if (nl > 4 && strcasecmp(name + nl - 4, ".wav") == 0) nl -= 4;
+        if (nl > 12) snprintf(shortName, sizeof(shortName), "%.11s~", name);
+        else         snprintf(shortName, sizeof(shortName), "%.*s", (int)nl, name);
+        if (len + 1 + strlen(shortName) > LUA_FILE_OPTS_MAX) return;
+        len += snprintf(luaFileOpts + len, sizeof(luaFileOpts) - len, ";%s", shortName);
+        snprintf(luaFileNames[luaFileCount++], SND_FILE_LEN, "%s", name);
+    };
+    if (cur[0]) add(cur);   // aktuelle Datei immer sichtbar, auch wenn sie fehlt
+    for (int i = 0; i < n; i++)
+        if (strcasecmp(files[i].name, cur) != 0) add(files[i].name);
+    delete[] files;
+}
+static uint8_t luaGetMapSlot(uint8_t)               { return luaMapSlot; }
+static void    luaSetMapSlot(uint8_t, uint8_t v)    { if (v < SND_FILE_SLOTS) luaMapSlot = v; }
+static void luaViewMapFile(uint8_t, LuaView& v, char*) {
+    luaBuildFileList();
+    v.text = luaFileOpts;
+    v.max  = luaFileCount;
+    v.value = scfg.Sound_File[luaMapSlot][0] ? 1 : 0;
+}
+static uint8_t luaGetMapFile(uint8_t)               { return scfg.Sound_File[luaMapSlot][0] ? 1 : 0; }
+static void    luaSetMapFile(uint8_t, uint8_t v) {
+    luaBuildFileList();
+    if (v == 0) soundMapSet(luaMapSlot, "");
+    else if (v <= luaFileCount) soundMapSet(luaMapSlot, luaFileNames[v - 1]);
+}
+static uint8_t luaGetZero(uint8_t)                  { return 0; }
+static void luaShowMapSize(uint8_t, LuaView& v, char* buf) {
+    const char* cur = scfg.Sound_File[luaMapSlot];
+    uint32_t size = 0;
+    if (!cur[0])                       snprintf(buf, LUA_VIEW_BUF, "-");
+    else if (!soundFileSize(cur, size)) snprintf(buf, LUA_VIEW_BUF, "Datei fehlt");
+    else                               snprintf(buf, LUA_VIEW_BUF, "%u KB", (unsigned)((size + 1023) / 1024));
+    v.text = buf;
+    v.max  = 0;
+}
+
+// Ordner "Sound-Zuordnung" ab Feld first (Ordner) bis first+3
+static void soundLuaMap(LuaMenu& m, uint8_t first) {
+    // v1.07: Sound-Zuordnung
+    {
+        size_t len = 0;
+        luaSlotOpts[0] = '\0';
+        for (int i = 0; i < SND_FILE_SLOTS; i++)
+            len += snprintf(luaSlotOpts + len, sizeof(luaSlotOpts) - len, "%s%s",
+                            i ? ";" : "", soundMapSlotLabel(i).c_str());
+    }
+    // Menue voll (255 Eintraege): Ordner einfach weglassen
+    if (!m.folder(first, 0, "Sound-Zuordnung")) return;
+    m.select(first + 1, first, "Platz", luaSlotOpts, luaGetMapSlot, luaSetMapSlot);
+    LuaItem* f = m.select(first + 2, first, "Datei", "(leer)", luaGetMapFile, luaSetMapFile);
+    if (f) f->view = luaViewMapFile;
+    // Groesse als Auswahl mit nur einem Eintrag statt Info-Feld: das ELRS-Lua
+    // laedt nach einer Aenderung von "Platz" nur Zahlen-/Auswahlfelder neu.
+    LuaItem* g = m.select(first + 3, first, "Groesse", "-", luaGetZero, nullptr);
+    if (g) g->view = luaShowMapSize;
 }
 
 // ======== Wiedergabe =================================================

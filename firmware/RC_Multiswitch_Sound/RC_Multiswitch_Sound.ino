@@ -1,5 +1,5 @@
 /*
-    RC-Multiswitch-Sound  v1.06  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
+    RC-Multiswitch-Sound  v1.07  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
 
  /////Projektbeschreibung////
  8-Kanal-Schaltmodul und Soundmodul in einer Firmware. Reine
@@ -25,6 +25,11 @@
    0 = FrSky   1 = FlySky   2 = ELRS normiert (SBUS)   3 = HoTT (SBUS)
    4 = CRSF (ExpressLRS / TBS CrossFire, bidirektional)
  Lua-Konfiguration und Modulkette gibt es nur bei CRSF.
+
+ NEU v1.07: Sound-Dateien behalten ihren Namen (Umlaute/Leerzeichen ersetzt).
+   Welche Datei auf welchem Platz spielt, steht in der Konfiguration
+   (sound_map.h). Neuer Web-Tab "Speicher" mit Auswahlliste je Platz,
+   im Lua der Ordner "Sound-Zuordnung" (Platz, Datei, Groesse).
 
  NEU v1.06: Lua zeigt das RC-System nur noch an ("ELRS CRSF (Web aendern)").
    Umstellen auf SBUS per Lua haette das Lua abgeschaltet, das geht jetzt
@@ -112,7 +117,8 @@
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
 #include "usb_drive.h"                      // v1.04: SD-Karte als USB-Laufwerk
 
-constexpr uint16_t Version = 106; // 1.06 - CRSF Parameter Version Number
+constexpr uint16_t Version = 107; // 1.07 - CRSF Parameter Version Number
+// v1.07: Sound-Zuordnung (Originalnamen, Web-Tab Speicher, Lua-Ordner).
 // v1.06: Lua: RC-System nur Anzeige (Umstellen nur in der Web-UI).
 // v1.05: Lua: Chunk-Fix (RC_Common 1.3.0), Werte in Ordnernamen, unpassende Felder ausgeblendet.
 // v1.04: SD-Karte als USB-Laufwerk am PC (usb_drive.cpp, USB Mode "USB-OTG (TinyUSB)").
@@ -907,7 +913,7 @@ static void buildLuaMenu() {
     LuaMenu& m = luaMenu;
     m.clear();
     m.folder(0, 0, "");
-    m.info(1, 0, "Version", "v1.06 " BOARD_NAME);
+    m.info(1, 0, "Version", "v1.07 " BOARD_NAME);
     m.folder(2, 0, "Global")->view = luaShowGlobalFolder;
     m.u8(3, 2, "Switch Addr", 0, 20, "", luaGetAddr, luaSetAddr);
     m.u8(4, 2, "SBUS EK Kanal", 0, 15, "", luaGetCrsfCh, luaSetCrsfCh)->view = luaHideSbusOnly;

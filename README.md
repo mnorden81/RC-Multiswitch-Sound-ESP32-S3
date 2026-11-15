@@ -129,6 +129,14 @@ GitHub baut die Firmware bei jeder Änderung automatisch (Workflow „Firmware b
 
 Schlägt das Update fehl, läuft die alte Firmware einfach weiter. Das Modul beim Update am besten über den Empfänger/BEC versorgen, nicht nur über einen schwachen USB-Anschluss.
 
+## Sound-Dateien und Zuordnung (ab v1.07)
+Hochgeladene WAV-Dateien behalten ihren Namen. Umlaute werden ersetzt (ä → ae), Leerzeichen werden zu `_`, erlaubt sind A-Z, a-z, 0-9, `_` und `-`, höchstens 40 Zeichen plus `.wav`. Welche Datei auf welchem Platz spielt (Loop, Standgas, Start, Sound 1-24), speichert das Modul selbst. Dieselbe Datei darf auf mehreren Plätzen liegen.
+
+- **Web-UI, Tab "Speicher"**: Speicherbelegung, je Platz eine Auswahlliste mit allen Dateien auf der SD-Karte, Liste der Dateien mit "spielt auf ...", Löschen und Hochladen mehrerer Dateien. Änderungen wirken sofort.
+- **Lua, Ordner "Sound-Zuordnung"**: Platz wählen, dann bei "Datei" eine der gespeicherten Dateien (lange Namen gekürzt, höchstens 20 Dateien in der Liste).
+- Alte SD-Karten laufen weiter: ohne gespeicherte Zuordnung gelten die festen Namen `loop.wav`, `shut.wav`, `start.wav`, `sound1.wav` ... `sound24.wav`.
+- Die Zuordnung steht auch in der exportierten Konfiguration (`sound_files`).
+
 ## Ordner
 - `hardware/`: KiCad-Projekt (Schaltplan, PCB, PDF, eigene Footprints, fp-lib-table). Entwurfsnotizen in [hardware/README-hardware.md](hardware/README-hardware.md).
 - `firmware/`: Firmware (Arduino-Sketch `RC_Multiswitch_Sound`), Build in GitHub Actions.
@@ -138,7 +146,7 @@ Schlägt das Update fehl, läuft die alte Firmware einfach weiter. Das Modul bei
 
 ## Stand
 - Hardware: Schaltplan v0.8, PCB in Arbeit. ERC-Stand v0.3 (hardware/ERC.rpt): 1 Fehler (IO8 unbeschaltet, seit v0.4 mit No-Connect-Flag, plus Rest-Leitungsstueck entfernt) und 55 Warnungen (Bibliotheksversionen "power"/"Device"/"local", harmlos). Nach v0.8 ERC neu ausfuehren.
-- Firmware: v1.06 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü), baut in GitHub Actions, auf Hardware noch nicht getestet.
+- Firmware: v1.07 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü, Sound-Dateien mit eigenem Namen und Zuordnung per Auswahlliste), baut in GitHub Actions, auf Hardware noch nicht getestet.
 
 ## Offene Punkte
 - R1-R16 vom Anwender je LED bzw. Verbraucher auslegen (3S, ca. 11-12 V); Helligkeit schwankt mit dem Ladezustand.

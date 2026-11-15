@@ -24,6 +24,8 @@
 #include <WebServer.h>
 #include <Preferences.h>
 #include "sound.h"
+#include "sound_map.h"   // v1.07: Sound-Zuordnung
+#include <new>
 #include "XT_I2S_Audio.h"
 #include "src/RC_Common/CRSF_ESP32/crsf_esp32.h"
 #include "src/RC_Common/uart_roles.h"
@@ -189,6 +191,14 @@ static String buildSoundJson() {
     j += "\"auto_timeout\":" + String(g_wifi_auto_timeout)      + ",";
     j += "\"always_on\":"    + String(g_wifi_always_on ? 1 : 0) + "},";
 
+    // v1.07: Sound-Zuordnung (Datei je Platz), Import ueber /api/soundmap
+    j += "\"sound_files\":{";
+    for (int i = 0; i < SND_FILE_SLOTS; i++) {
+        if (i) j += ",";
+        j += "\"" + soundMapSlotKey(i) + "\":\"" + webJsonEscape(scfg.Sound_File[i]) + "\"";
+    }
+    j += "},";
+
     j += "\"version\":\"" + versionString() + "\"";
     j += "}";
     return j;
@@ -308,25 +318,13 @@ static void handleSdDelete() {
 }
 
 // ── Sound-Dateien hochladen/loeschen (WLAN -> SD-Karte) ──────────────────
+// v1.07: die Datei behaelt ihren Namen (die Weboberflaeche ersetzt vorher
+// Umlaute und Leerzeichen), erlaubt sind nur A-Z a-z 0-9 _ - und ".wav".
+// Welche Datei auf welchem Platz spielt, steht in scfg.Sound_File[]
+// (sound_map.h). Mit slot=loop|shut|start|1..24 wird die hochgeladene Datei
+// gleich diesem Platz zugeordnet (Tabs Motor/Sounds).
 static bool isValidSoundUploadName(const String& name) {
-    if (name == "loop.wav" || name == "shut.wav" || name == "start.wav") return true;
-    if (!name.startsWith("sound") || !name.endsWith(".wav")) return false;
-    String numPart = name.substring(5, name.length() - 4);
-    if (numPart.length() == 0 || numPart.length() > 2) return false;
-    for (size_t i = 0; i < numPart.length(); i++) if (!isDigit(numPart[i])) return false;
-    int n = numPart.toInt();
-    return n >= 1 && n <= 24;
-}
-
-static XT_Wav_Class* soundObjectFor(const String& name) {
-    if (name == "loop.wav")  return &Sound_loop;
-    if (name == "shut.wav")  return &Sound_shut;
-    if (name == "start.wav") return &Sound_start;
-    if (name.startsWith("sound") && name.endsWith(".wav")) {
-        int n = name.substring(5, name.length() - 4).toInt();
-        if (n >= 1 && n <= 24) return Sounds[n];
-    }
-    return nullptr;
+    return soundNameOk(name.c_str(), true);
 }
 
 // v7.11/v7.12: nur 5 Datei-Deskriptoren (max_files, siehe SDCardInit()).
@@ -375,7 +373,6 @@ static bool     uploadMutexHeld   = false;
 static bool     uploadFailed      = false;
 static String   uploadErrCode;
 static uint32_t uploadBytes       = 0;
-static XT_Wav_Class* uploadTargetSound = nullptr;
 static uint32_t uploadMotorMask   = 0;
 
 // Upload-Callback (START -> mehrfach WRITE -> END/ABORTED). Die Datei geht
@@ -388,25 +385,22 @@ static void handleSoundUploadData() {
 
     if (upload.status == UPLOAD_FILE_START) {
         uploadFailed = false; uploadErrCode = ""; uploadBytes = 0; uploadMutexHeld = false;
-        uploadTargetSound = nullptr;
         uploadMotorMask = 0;
 
         String name = sv->arg("name");
         if (!isValidSoundUploadName(name)) { uploadFailed = true; uploadErrCode = "bad_name"; return; }
 
-        XT_Wav_Class* target = soundObjectFor(name);
-        if (target) target->UnLoadWavFile();
-        uint32_t motorMask = releaseIdleSoundHandles(target);
+        soundMapCloseUsers(name.c_str());   // alle Plaetze mit dieser Datei anhalten
+        uint32_t motorMask = releaseIdleSoundHandles(nullptr);
 
         if (!sdMutexTake(3000)) {
             uploadFailed = true; uploadErrCode = "sd_busy";
             logSdUploadFail(name.c_str(), "sd_busy", motorMask, 0);
-            if (target) target->LoadWavFile();
+            soundMapReloadUsers(name.c_str());
             restoreSoundHandles(motorMask);
             return;
         }
         uploadMutexHeld = true;
-        uploadTargetSound = target;
         uploadMotorMask   = motorMask;
 
         SD.remove("/" + name);
@@ -415,8 +409,8 @@ static void handleSoundUploadData() {
             uploadFailed = true; uploadErrCode = "sd_locked";
             logSdUploadFail(name.c_str(), "sd_locked (Datei schreibgeschuetzt?)", motorMask, 0);
             sdMutexGive(); uploadMutexHeld = false;
-            uploadTargetSound = nullptr; uploadMotorMask = 0;
-            if (target) target->LoadWavFile();
+            uploadMotorMask = 0;
+            soundMapReloadUsers(name.c_str());
             restoreSoundHandles(motorMask);
             return;
         }
@@ -425,7 +419,7 @@ static void handleSoundUploadData() {
             uploadFailed = true; uploadErrCode = "sd_write";
             logSdUploadFail(name.c_str(), "sd_write (SD.open fehlgeschlagen)", motorMask, 0);
             sdMutexGive(); uploadMutexHeld = false;
-            uploadTargetSound = nullptr; uploadMotorMask = 0;
+            uploadMotorMask = 0;
             restoreSoundHandles(motorMask);
             return;
         }
@@ -449,12 +443,15 @@ static void handleSoundUploadData() {
         } else {
             Serial.printf("[SD-Upload] Fertig: %u Bytes\n", (unsigned)uploadBytes);
         }
-        XT_Wav_Class* target = uploadTargetSound;
         uint32_t motorMask   = uploadMotorMask;
-        uploadTargetSound = nullptr;
         uploadMotorMask   = 0;
         if (uploadMutexHeld) { sdMutexGive(); uploadMutexHeld = false; }
-        if (target) target->LoadWavFile();
+        String upName = sv->arg("name");
+        if (isValidSoundUploadName(upName)) {
+            int slot = soundMapSlotFromKey(sv->arg("slot"));
+            if (!uploadFailed && slot >= 0) soundMapSet(slot, upName.c_str());
+            soundMapReloadUsers(upName.c_str());
+        }
         restoreSoundHandles(motorMask);
         markSdActivity();
     }
@@ -467,46 +464,85 @@ static void handleSoundUpload() {
     sendJson("{\"ok\":true,\"file\":\"" + name + "\",\"size\":" + String(uploadBytes) + "}");
 }
 
-static bool sdFileInfo(const String& path, uint32_t& outSize) {
-    File f = SD.open(path, FILE_READ);
-    if (!f) return false;
-    outSize = f.size();
-    f.close();
-    return true;
-}
-
+// v1.07: je Platz die zugeordnete Datei, ob sie auf der Karte liegt und wie
+// gross sie ist (Tabs Motor/Sounds)
 static void handleSoundFiles() {
-    static const char* const fixedNames[3] = { "loop.wav", "shut.wav", "start.wav" };
-    bool haveSd = sdMutexTake(3000);
-    String j = "{\"ok\":true,\"files\":{";
-    for (int i = 0; i < 3 + 24; i++) {
-        String name = (i < 3) ? String(fixedNames[i]) : ("sound" + String(i - 2) + ".wav");
+    String j = "{\"ok\":true,\"slots\":{";
+    for (int i = 0; i < SND_FILE_SLOTS; i++) {
+        const char* f = scfg.Sound_File[i];
         uint32_t size = 0;
-        bool exists = haveSd && sdFileInfo("/" + name, size);
+        bool exists = soundFileSize(f, size);
         if (i) j += ",";
-        j += "\"" + name + "\":{\"exists\":" + String(exists ? "true" : "false") + ",\"size\":" + String(size) + "}";
+        j += "\"" + soundMapSlotKey(i) + "\":{\"file\":\"" + webJsonEscape(f) + "\",\"exists\":" +
+             String(exists ? "true" : "false") + ",\"size\":" + String(size) + "}";
     }
     j += "}}";
-    if (haveSd) sdMutexGive();
     sendJson(j);
+}
+
+// v1.07: alle WAV-Dateien der Karte, Zuordnung je Platz, Belegung (Tab "Speicher")
+static void handleSoundLib() {
+    SoundFileInfo* files = new (std::nothrow) SoundFileInfo[SND_LIST_MAX];   // nur kurz auf dem Heap
+    if (!files) { sv->send(503, "application/json", "{\"ok\":false,\"error\":\"no_mem\"}"); return; }
+    int n = soundListFiles(files, SND_LIST_MAX);
+    uint64_t sdTotal = 0, sdUsed = 0;
+    if (SD.cardType() != CARD_NONE && sdMutexTake(3000)) {
+        sdTotal = SD.totalBytes(); sdUsed = SD.usedBytes();
+        sdMutexGive();
+    }
+    String j = "{\"ok\":true,\"maxlen\":" + String((unsigned)SND_NAME_MAX_BASE) +
+               ",\"store\":\"" + String(sdUsbLocked() ? "SD-Karte (am PC)" : "SD-Karte") + "\"" +
+               ",\"total\":" + String((double)sdTotal, 0) +
+               ",\"used\":"  + String((double)sdUsed, 0) +
+               ",\"more\":" + String(n >= SND_LIST_MAX ? "true" : "false") + ",\"files\":[";
+    for (int i = 0; i < n; i++) {
+        if (i) j += ",";
+        j += "{\"name\":\"" + webJsonEscape(files[i].name) + "\",\"size\":" + String(files[i].size) + "}";
+    }
+    delete[] files;
+    j += "],\"slots\":[";
+    for (int i = 0; i < SND_FILE_SLOTS; i++) {
+        if (i) j += ",";
+        j += "{\"key\":\"" + soundMapSlotKey(i) + "\",\"label\":\"" + soundMapSlotLabel(i) +
+             "\",\"file\":\"" + webJsonEscape(scfg.Sound_File[i]) + "\"}";
+    }
+    j += "]}";
+    sendJson(j);
+}
+
+// v1.07: POST /api/soundmap {"slot":"loop"|"shut"|"start"|"1".., "file":"name.wav"|""}
+// Die Datei muss nicht vorhanden sein (Import vor dem Kopieren der Sounds).
+static void handleSoundMap() {
+    if (!sv->hasArg("plain")) { sendErr(); return; }
+    const String& body = sv->arg("plain");
+    String key, file;
+    if (!webJsonString(body, "slot", key)) { sendErr(); return; }
+    int slot = soundMapSlotFromKey(key);
+    if (slot < 0 || !webJsonString(body, "file", file)) { sendErr(); return; }   // "" = Platz leer
+    if (file.length() >= SND_FILE_LEN || !soundMapSet(slot, file.c_str())) {
+        sv->send(400, "application/json", "{\"ok\":false,\"error\":\"bad_name\"}");
+        return;
+    }
+    sendOk();
 }
 
 static void handleSoundDelete() {
     String name = sv->arg("name");
-    if (!isValidSoundUploadName(name)) { sv->send(400, "application/json", "{\"ok\":false,\"error\":\"bad_name\"}"); return; }
-    XT_Wav_Class* target = soundObjectFor(name);
-    if (target) target->UnLoadWavFile();
-    uint32_t motorMask = releaseIdleSoundHandles(target);
+    if (!soundNameOk(name.c_str(), false)) { sv->send(400, "application/json", "{\"ok\":false,\"error\":\"bad_name\"}"); return; }
+    soundMapCloseUsers(name.c_str());   // v1.07: alle Plaetze mit dieser Datei
+    uint32_t motorMask = releaseIdleSoundHandles(nullptr);
     if (!sdMutexTake(3000)) {
         sv->send(503, "application/json", "{\"ok\":false,\"error\":\"sd_busy\"}");
-        if (target) target->LoadWavFile();
+        soundMapReloadUsers(name.c_str());
         restoreSoundHandles(motorMask);
         return;
     }
     bool existed = SD.exists("/" + name);
     bool ok = !existed || SD.remove("/" + name);
     sdMutexGive();
-    if (target) target->LoadWavFile();
+    // geloescht -> Plaetze mit dieser Datei werden leer, sonst neu laden
+    if (ok) soundMapClearUsers(name.c_str());
+    else    soundMapReloadUsers(name.c_str());
     restoreSoundHandles(motorMask);
     markSdActivity();
     if (ok) sendJson("{\"ok\":true,\"file\":\"" + name + "\",\"existed\":" + String(existed ? "true" : "false") + "}");
@@ -664,6 +700,8 @@ void soundWebRegister(WebServer& server) {
     server.on("/api/soundupload", HTTP_POST, handleSoundUpload, handleSoundUploadData);
     server.on("/api/soundfiles", HTTP_GET,  handleSoundFiles);
     server.on("/api/sounddelete", HTTP_POST, handleSoundDelete);
+    server.on("/api/soundlib",   HTTP_GET,  handleSoundLib);    // v1.07: Sound-Zuordnung
+    server.on("/api/soundmap",   HTTP_POST, handleSoundMap);
     server.on("/api/wifi_enable", HTTP_POST, handleWifiEnable);
     // Ende eines Sound-Imports: nur als geaendert markieren, gespeichert wird
     // entprellt in soundSavePending()
