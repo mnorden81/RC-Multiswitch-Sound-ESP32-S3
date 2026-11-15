@@ -1,5 +1,5 @@
 /*
-    RC-Multiswitch-Sound  v1.07  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
+    RC-Multiswitch-Sound  v1.08  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
 
  /////Projektbeschreibung////
  8-Kanal-Schaltmodul und Soundmodul in einer Firmware. Reine
@@ -25,6 +25,13 @@
    0 = FrSky   1 = FlySky   2 = ELRS normiert (SBUS)   3 = HoTT (SBUS)
    4 = CRSF (ExpressLRS / TBS CrossFire, bidirektional)
  Lua-Konfiguration und Modulkette gibt es nur bei CRSF.
+
+ NEU v1.08: Status-LED mit demselben Farbschema wie alle Module (RC_Common
+   1.4.0): gruen langsam = OK, rot schnell = Failsafe / kein RC-Link, rot
+   Aufblitzen = kein Signal (vorher aus), blau Doppelblitz = doppelte
+   Moduladresse, violett statt gruen/rot = WLAN an. Lua Global > "LED
+   Farbfolge" (Feld 86, NVS "ledrgb", Vorgabe GRB fuer den DevKitC-1).
+   BOOT-Taster 2 s halten (vorher 3 s) schaltet das WLAN, wie beim Router.
 
  NEU v1.07: Sound-Dateien behalten ihren Namen (Umlaute/Leerzeichen ersetzt).
    Welche Datei auf welchem Platz spielt, steht in der Konfiguration
@@ -117,7 +124,8 @@
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
 #include "usb_drive.h"                      // v1.04: SD-Karte als USB-Laufwerk
 
-constexpr uint16_t Version = 107; // 1.07 - CRSF Parameter Version Number
+constexpr uint16_t Version = 108; // 1.08 - CRSF Parameter Version Number
+// v1.08: Status-LED einheitlich (RC_Common 1.4.0), Lua "LED Farbfolge", BOOT 2 s.
 // v1.07: Sound-Zuordnung (Originalnamen, Web-Tab Speicher, Lua-Ordner).
 // v1.06: Lua: RC-System nur Anzeige (Umstellen nur in der Web-UI).
 // v1.05: Lua: Chunk-Fix (RC_Common 1.3.0), Werte in Ordnernamen, unpassende Felder ausgeblendet.
@@ -299,6 +307,7 @@ bool     g_wifi_always_on    = true;
 // Status-LED-Pin (48 oder 38, NVS "ledpin") und Zahl der Sounds im
 // Lua-Menue (8/12/16/20/23, NVS "luasnd"). Beides wirkt nach einem Neustart.
 int     g_led_pin    = STATUS_LED_PIN_DEFAULT;
+bool    g_led_rgb    = false;   // v1.08: LED-Farbfolge, false = GRB (DevKitC-1), true = RGB
 uint8_t g_lua_sounds = 8;
 static int clampLedPin(int v)        { return v == STATUS_LED_PIN_ALT ? STATUS_LED_PIN_ALT : STATUS_LED_PIN_DEFAULT; }
 static uint8_t clampLuaSounds(int v) { return (uint8_t)constrain(v, 1, (int)SND_LUA_MAX); }
@@ -348,6 +357,7 @@ static void nvsWriteNow() {
     p.putInt("crsf_ch", CRSF_Channel);
     p.putInt("ek_mode", einkanal_mode);
     p.putInt("ledpin",  g_led_pin);       // v1.00
+    p.putBool("ledrgb", g_led_rgb);       // v1.08
     p.putInt("luasnd",  g_lua_sounds);    // v1.00
     for (int g = 0; g < MULTISW_NUM_GROUPS; g++) {
         char key[8];
@@ -406,6 +416,7 @@ static void nvsLoad() {
     CRSF_Channel  = p.getInt("crsf_ch", 4);
     einkanal_mode = p.getInt("ek_mode", 0);
     g_led_pin     = clampLedPin(p.getInt("ledpin", STATUS_LED_PIN_DEFAULT));
+    g_led_rgb     = p.getBool("ledrgb", false);   // v1.08
     g_lua_sounds  = clampLuaSounds(p.getInt("luasnd", 8));
     for (int g = 0; g < MULTISW_NUM_GROUPS; g++) {
         char key[8];
@@ -450,7 +461,7 @@ static void nvsLoad() {
 
 static void nvsReset() {
     RC_System = 0; CRSF_Channel = 4; einkanal_mode = 0; modul_adress = 0;
-    g_led_pin = STATUS_LED_PIN_DEFAULT; g_lua_sounds = 8;
+    g_led_pin = STATUS_LED_PIN_DEFAULT; g_lua_sounds = 8; g_led_rgb = false;
     for (int g = 0; g < MULTISW_NUM_GROUPS; g++) {
         EK_Gruppen_Adresse[g] = 255; SBUS_Gruppen_Channel[g] = 999; SBUS_Gruppen_Mode[g] = 0;
     }
@@ -478,9 +489,10 @@ static void nvsReset() {
 void storageSave() { nvsFlushPending(); soundSaveNow(); }
 
 // ======== Status-LED ============================================
-// v4.00: Muster nach Firmware-Spezifikation Kapitel 6, ab v4.05 aus
-// RC_Common (status_led.h): aus = kein Signal, langsam = OK, schnell =
-// Frames ohne RC-Link bzw. Failsafe, Doppelblitz = Konfigurationsfehler.
+// v1.08: Farben und Muster aus RC_Common 1.4.0, gleiches Schema in allen
+// Modulen: gruen langsam = OK, rot schnell = Frames ohne RC-Link bzw.
+// Failsafe, rot Aufblitzen = kein Signal, blau Doppelblitz = doppelte
+// Moduladresse, violett statt gruen/rot = WLAN an.
 // Reine Anzeige - aendert weder BUS_OK noch das Ausgangsverhalten.
 
 // Konfigurationsfehler (Doppelblitz). v4.01: gesetzt, wenn der Router eine
@@ -488,6 +500,7 @@ void storageSave() { nvsFlushPending(); soundSaveNow(); }
 bool g_ledConfigError = false;
 static unsigned long lastSbusFrameMs = 0;
 static StatusLed statusLed;   // WS2812 des DevKitC-1, Pin g_led_pin
+bool webui_isApActive();      // webui.h
 
 static void updateLed() {
     unsigned long now = millis();
@@ -501,7 +514,9 @@ static void updateLed() {
     in.uplinkLQ        = ls.uplinkLQ;
     in.lastSbusFrameMs = lastSbusFrameMs;
     in.sbusFailsafe    = sbus_data.failsafe;
-    statusLed.update(statusLedMode(in, now), now);
+    statusLed.setRgbOrder(g_led_rgb);
+    // Doppelblitz gibt es hier nur bei doppelter Adresse -> blau
+    statusLed.update(statusLedMode(in, now), now, g_ledConfigError, webui_isApActive());
 }
 
 // ======== CRSF-Failsafe =========================================
@@ -776,6 +791,9 @@ static void    luaSetCrsfCh(uint8_t, uint8_t v) { CRSF_Channel = v; nvsSave(); }
 static void luaHideSbusOnly(uint8_t, LuaView& v, char*) {
     if (RC_System_boot == 4) v.hidden = true;
 }
+static uint8_t luaGetLedRgb(uint8_t)            { return g_led_rgb ? 0 : 1; }   // v1.08
+static void    luaSetLedRgb(uint8_t, uint8_t v) { g_led_rgb = (v == 0); nvsSave(); }
+
 static void luaShowGlobalFolder(uint8_t, LuaView& v, char* buf) {
     snprintf(buf, LUA_VIEW_BUF, "Global (Adr %d)", modul_adress);
     v.name = buf;
@@ -913,10 +931,11 @@ static void buildLuaMenu() {
     LuaMenu& m = luaMenu;
     m.clear();
     m.folder(0, 0, "");
-    m.info(1, 0, "Version", "v1.07 " BOARD_NAME);
+    m.info(1, 0, "Version", "v1.08 " BOARD_NAME);
     m.folder(2, 0, "Global")->view = luaShowGlobalFolder;
     m.u8(3, 2, "Switch Addr", 0, 20, "", luaGetAddr, luaSetAddr);
     m.u8(4, 2, "SBUS EK Kanal", 0, 15, "", luaGetCrsfCh, luaSetCrsfCh)->view = luaHideSbusOnly;
+    m.select(86, 2, "LED Farbfolge", "RGB;GRB (DevKitC-1)", luaGetLedRgb, luaSetLedRgb);   // v1.08
     for (uint8_t x = 0; x < 8; x++) {
         uint8_t fi = 5 + x * 9;
         snprintf(luaOutName[x], sizeof(luaOutName[x]), "Ausgang %d", x + 1);
@@ -997,11 +1016,11 @@ static void wifiFailsafeCheck() {
 }
 
 // ======== BOOT-Taster (NEU v4.01) ===============================
-// Langer Druck (>= 3 s) schaltet den WLAN-AP um, wirkt sofort und ohne
+// Langer Druck (>= 2 s, bis v1.07 3 s) schaltet den WLAN-AP um, wirkt sofort und ohne
 // nvsSave() - wie der Sofort-Schalter in der Web-UI. Der Taster ist ein
 // Strapping-Pin (beim Reset gedrueckt = Download-Modus). Deshalb wird er
 // erst ausgewertet, nachdem er nach dem Booten einmal losgelassen war.
-static constexpr unsigned long BOOT_LONG_PRESS_MS = 3000;
+static constexpr unsigned long BOOT_LONG_PRESS_MS = 2000;   // v1.08: 2 s wie beim Router
 static void bootButtonCheck() {
     static bool          armed   = false;
     static bool          pressed = false;
