@@ -1,23 +1,11 @@
 /*
- * webui.h  –  WiFi-Weboberfläche für RC-Multiswitch-Sound S3  v1.00
- * v1.00: Basis RC-Multiswitch-ESP32-S3 v4.06. Die Seite (webui_page.h)
- * enthaelt jetzt Schalt- und Soundteil; die Routen des Soundteils
- * (/api/sconfig, /api/sound, /api/debug, SD-Dateien, ...) haengt
- * soundWebRegister() (sound_web.cpp) an denselben Webserver. /api/config
- * hat zusaetzlich lua_sounds und led_pin.
- * v4.06: Einstellungs-Backup im Flash (RC_Common config_backup, Karte
- * "Konfiguration sichern"), automatisch vor Import und Firmware-Update.
- * v4.05: OTA-Upload, JSON-Helfer und /rc_common.js kommen aus RC_Common
- * (src/RC_Common/web_common.h). Baudrate je UART, Rolle "Raw".
- * NEU v4.04: Karte "UART B/C" im RC-Tab (Rolle Aus/CRSF/S.Port/GPS) und
- * Anzeige von S.Port/GPS im Debug-Tab. g_port_role[], g_port_baud[],
- * g_ports[] stehen in RC_Multiswitch.ino vor dem Include dieser Datei.
- * NEU V3.00: MKan-Gruppen (2 zusaetzliche, unabhaengige Kanalquellen) -
- * siehe Kommentar bei MULTISW_NUM_GROUPS in MultiSwitch_ESP32_V3.ino.
- * NEU V3.10: bis zu 3 Konfigurationen (Kanal-Quelle + Blink/PWM) pro
- * Ausgang, Prioritaet Konfig1 > Konfig2 > Konfig3 - siehe evalSlotActive()/
- * Output() in MultiSwitch_ESP32_V3.ino. Konfig 2/3 sind bewusst NUR hier in
- * der Web-UI verfuegbar, nicht im CRSF-LUA-Menue (siehe README).
+ * webui.h  –  WiFi-Weboberfläche für RC-Multiswitch-Sound S3
+ * Basis RC-Multiswitch-ESP32-S3 v4.06. Die Seite (webui_page.h) enthaelt
+ * Schalt- und Soundteil; die Routen des Soundteils (/api/sconfig,
+ * /api/sound, /api/debug, SD-Dateien, ...) haengt soundWebRegister()
+ * (sound_web.cpp) an denselben Webserver. Konfig 2/3 je Ausgang und die
+ * MKan-Gruppen sind nur hier in der Web-UI einstellbar, nicht im Lua.
+ * Versionsgeschichte: siehe CHANGELOG.md.
  */
 
 #pragma once

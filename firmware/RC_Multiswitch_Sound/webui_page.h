@@ -1,4 +1,4 @@
-// webui_page.h - Web-Seite des RC-Multiswitch-Sound v1.00 (PROGMEM)
+// webui_page.h - Web-Seite des RC-Multiswitch-Sound (PROGMEM)
 // Zusammengefuehrt aus der Seite von RC-Multiswitch-ESP32-S3 v4.06 (webui.h)
 // und ESP32-Sound-Basis v7.21 (WebServerManager.cpp). Doppelte Namen im
 // Soundteil: Funktionen snd_*, IDs sb-*, Reiter stab-*, /api/sconfig.

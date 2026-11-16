@@ -15,7 +15,7 @@ SPALT     = 0.6      # Luft Platine <-> Innenwand (oben/rechts/unten)
 SPALT_L   = 3.0      # links mehr Luft: microSD-Slot ragt 2,6 mm ueber die Kante
 UNTEN     = 5.0      # Platz unter der Platine (Loetstellen)
 INNEN_H   = 24.0     # Platz ueber der Platine (Elko C1 10x22 stehend = hoechstes Teil, +2 mm Luft)
-ESP_Z     = 13.0     # Unterkante ESP-Board ueber Platine (Annahme 11 mm + 2 mm laut Martin)
+ESP_Z     = 13.0     # Unterkante ESP-Board ueber Platine (Annahme 11 mm + 2 mm, am Aufbau gemessen)
 SCHRAUBE_D = 2.5     # Kernloch fuer M3-Blech-/Kunststoffschraube (Platine, 4x an den TPA-Loechern)
 DECKEL_SCHR_D = 2.2  # Kernloch Deckelschrauben (M2,5 x 8 selbstschneidend)
 DECKEL_SCHR_K = 2.8  # Durchgangsloch im Deckel

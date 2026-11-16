@@ -45,8 +45,8 @@ Board: ESP32-S3-DevKitC-1 N16R8 (oder Clone)
 - Footprint ESP32-S3-DevKitC-1_THT mit Reihenabstand 25,4 mm. Vor dem Layout am echten Board nachmessen. Eigene Footprints fuer PCM5102A, microSD-Modul und TPA3118-Modul liegen in hardware/footprints.pretty; die Masse sind aus Fotos geschaetzt und vor dem Layout nachzumessen.
 - Nicht gleichzeitig USB und BEC anschliessen, ohne die Schutzdiode des Boards zu pruefen.
 
-## Firmware (v1.03, nicht auf Hardware getestet)
-Arduino-Sketch [firmware/RC_Multiswitch_Sound](firmware/RC_Multiswitch_Sound), Beschreibung in [firmware/README.md](firmware/README.md).
+## Firmware (v1.09, nicht auf Hardware getestet)
+Arduino-Sketch [firmware/RC_Multiswitch_Sound](firmware/RC_Multiswitch_Sound), Beschreibung in [firmware/README.md](firmware/README.md), alle Versionen in [CHANGELOG.md](CHANGELOG.md).
 
 Reine Zusammenfuehrung von zwei bestehenden Firmwares:
 - Schaltteil: RC-Multiswitch-ESP32-S3 v4.06 (= ESP32-Multiswitch-Basis V3/TXRX mit S3-Teilen): 8 Ausgaenge, Blinken, PWM, MWprop, bis 3 Konfigurationen je Ausgang, MKan-Gruppen, CRSF-Modulkette.
@@ -146,7 +146,7 @@ Hochgeladene WAV-Dateien behalten ihren Namen. Umlaute werden ersetzt (ä → ae
 
 ## Stand
 - Hardware: Schaltplan v0.8, PCB in Arbeit. ERC-Stand v0.3 (hardware/ERC.rpt): 1 Fehler (IO8 unbeschaltet, seit v0.4 mit No-Connect-Flag, plus Rest-Leitungsstueck entfernt) und 55 Warnungen (Bibliotheksversionen "power"/"Device"/"local", harmlos). Nach v0.8 ERC neu ausfuehren.
-- Firmware: v1.09 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü, Sound-Dateien mit eigenem Namen und Zuordnung per Auswahlliste, Status-LED wie alle Module, v1.09: LED-Feld im Lua nur noch einmal, Ordner „Motor“ wieder da), baut in GitHub Actions, auf Hardware noch nicht getestet.
+- Firmware: v1.09, baut in GitHub Actions, auf Hardware noch nicht getestet. Änderungen siehe [CHANGELOG.md](CHANGELOG.md).
 
 ## Offene Punkte
 - R1-R16 vom Anwender je LED bzw. Verbraucher auslegen (3S, ca. 11-12 V); Helligkeit schwankt mit dem Ladezustand.
@@ -157,4 +157,4 @@ Hochgeladene WAV-Dateien behalten ihren Namen. Umlaute werden ersetzt (ä → ae
 - Module nachmessen und Footprints anpassen: PCM5102A, microSD-Modul, TPA3118 (Padlage, Befestigungsloecher, Belegung IN/GND per Multimeter pruefen), ESP32-S3-DevKitC-1.
 - PCB-Layout erstellen
 - Gehaeuse (hardware/gehaeuse/) am echten Aufbau pruefen: Hoehe Elko C1 (22 mm angenommen), ESP 13 mm ueber der Platine, Lage USB-C und microSD-Slot
-- Firmware v1.03 auf der Platine testen (Ausgaenge, Sound, SD-Karte, Status-LED IO48/IO38)
+- Firmware auf der Platine testen (Ausgaenge, Sound, SD-Karte, Status-LED IO48/IO38)
