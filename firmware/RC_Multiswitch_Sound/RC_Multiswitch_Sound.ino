@@ -1,5 +1,5 @@
 /*
-    RC-Multiswitch-Sound  v1.08  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
+    RC-Multiswitch-Sound  v1.09  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
 
  /////Projektbeschreibung////
  8-Kanal-Schaltmodul und Soundmodul in einer Firmware. Reine
@@ -26,11 +26,16 @@
    4 = CRSF (ExpressLRS / TBS CrossFire, bidirektional)
  Lua-Konfiguration und Modulkette gibt es nur bei CRSF.
 
+ NEU v1.09: Lua "LED Farbfolge" hatte dieselbe Feld-ID 86 wie der Ordner
+   "Motor". Das Lua zeigte die LED-Einstellung dadurch doppelt, der Ordner
+   "Motor" fehlte. Das Feld hat jetzt eine eigene ID direkt hinter dem
+   letzten Feld (Sound-Zuordnung) und steht weiter im Ordner "Global".
+
  NEU v1.08: Status-LED mit demselben Farbschema wie alle Module (RC_Common
    1.4.0): gruen langsam = OK, rot schnell = Failsafe / kein RC-Link, rot
    Aufblitzen = kein Signal (vorher aus), blau Doppelblitz = doppelte
    Moduladresse, violett statt gruen/rot = WLAN an. Lua Global > "LED
-   Farbfolge" (Feld 86, NVS "ledrgb", Vorgabe GRB fuer den DevKitC-1).
+   Farbfolge" (NVS "ledrgb", Vorgabe GRB fuer den DevKitC-1).
    BOOT-Taster 2 s halten (vorher 3 s) schaltet das WLAN, wie beim Router.
 
  NEU v1.07: Sound-Dateien behalten ihren Namen (Umlaute/Leerzeichen ersetzt).
@@ -92,6 +97,8 @@
    111      Geraetename (Info)
    112-...  Sound 1..n, je 6 Felder (Ordner, Quelle, Kanal, Volumen,
             Wiedergabe Mode, Test Sound), n = 8 (Vorgabe) bis 23
+   danach   Ordner "Sound-Zuordnung" (4 Felder), dann "LED Farbfolge"
+            (im Ordner Global, v1.09; bei 23 Sounds Feld 254)
 */
 
 // ======== Bibliotheken ==========================================
@@ -124,7 +131,7 @@
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
 #include "usb_drive.h"                      // v1.04: SD-Karte als USB-Laufwerk
 
-constexpr uint16_t Version = 108; // 1.08 - CRSF Parameter Version Number
+constexpr uint16_t Version = 109; // 1.09 - CRSF Parameter Version Number
 // v1.08: Status-LED einheitlich (RC_Common 1.4.0), Lua "LED Farbfolge", BOOT 2 s.
 // v1.07: Sound-Zuordnung (Originalnamen, Web-Tab Speicher, Lua-Ordner).
 // v1.06: Lua: RC-System nur Anzeige (Umstellen nur in der Web-UI).
@@ -931,11 +938,10 @@ static void buildLuaMenu() {
     LuaMenu& m = luaMenu;
     m.clear();
     m.folder(0, 0, "");
-    m.info(1, 0, "Version", "v1.08 " BOARD_NAME);
+    m.info(1, 0, "Version", "v1.09 " BOARD_NAME);
     m.folder(2, 0, "Global")->view = luaShowGlobalFolder;
     m.u8(3, 2, "Switch Addr", 0, 20, "", luaGetAddr, luaSetAddr);
     m.u8(4, 2, "SBUS EK Kanal", 0, 15, "", luaGetCrsfCh, luaSetCrsfCh)->view = luaHideSbusOnly;
-    m.select(86, 2, "LED Farbfolge", "RGB;GRB (DevKitC-1)", luaGetLedRgb, luaSetLedRgb);   // v1.08
     for (uint8_t x = 0; x < 8; x++) {
         uint8_t fi = 5 + x * 9;
         snprintf(luaOutName[x], sizeof(luaOutName[x]), "Ausgang %d", x + 1);
@@ -986,6 +992,10 @@ static void buildLuaMenu() {
     m.select(110, 99, "WLAN jetzt", "Aus;Ein", luaGetWifiNow, luaSetWifiNow);
     m.info(111, 0, "Geraetename", "")->view = luaShowDeviceName;
     soundLuaSounds(m, g_lua_sounds);                          // ab 112
+    // v1.09: eigene ID direkt hinter dem letzten Feld, damit die IDs
+    // lueckenlos bleiben (86 gehoert dem Ordner "Motor"). Angezeigt wird
+    // das Feld trotzdem im Ordner "Global".
+    m.select(m.maxId() + 1, 2, "LED Farbfolge", "RGB;GRB (DevKitC-1)", luaGetLedRgb, luaSetLedRgb);
 }
 
 // ======== Webinterface ==========================================
