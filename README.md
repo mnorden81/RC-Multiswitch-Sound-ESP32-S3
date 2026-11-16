@@ -146,7 +146,7 @@ Hochgeladene WAV-Dateien behalten ihren Namen. Umlaute werden ersetzt (ä → ae
 
 ## Stand
 - Hardware: Schaltplan v0.8, PCB in Arbeit. ERC-Stand v0.3 (hardware/ERC.rpt): 1 Fehler (IO8 unbeschaltet, seit v0.4 mit No-Connect-Flag, plus Rest-Leitungsstueck entfernt) und 55 Warnungen (Bibliotheksversionen "power"/"Device"/"local", harmlos). Nach v0.8 ERC neu ausfuehren.
-- Firmware: v1.08 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü, Sound-Dateien mit eigenem Namen und Zuordnung per Auswahlliste, Status-LED wie alle Module), baut in GitHub Actions, auf Hardware noch nicht getestet.
+- Firmware: v1.09 (Multiswitch V3 + Sound-Basis v7.21, Lua-Fix Kanalwahl aus v7.22, SD-Karte als USB-Laufwerk, übersichtlicheres Lua-Menü, Sound-Dateien mit eigenem Namen und Zuordnung per Auswahlliste, Status-LED wie alle Module, v1.09: LED-Feld im Lua nur noch einmal, Ordner „Motor“ wieder da), baut in GitHub Actions, auf Hardware noch nicht getestet.
 
 ## Offene Punkte
 - R1-R16 vom Anwender je LED bzw. Verbraucher auslegen (3S, ca. 11-12 V); Helligkeit schwankt mit dem Ladezustand.
