@@ -1,10 +1,11 @@
 /*
     RC-Multiswitch-Sound  v1.09  (ESP32-S3-DevKitC-1 N16R8, Platine v0.9)
+    PiperPilot
 
  /////Projektbeschreibung////
  8-Kanal-Schaltmodul und Soundmodul in einer Firmware. Reine
  Zusammenfuehrung von zwei bestehenden Firmwares, ohne neue Funktionen
- (Ausnahmen siehe "NEU" unten):
+ (Ausnahmen siehe CHANGELOG.md, v1.00):
    Schaltteil  = RC-Multiswitch-ESP32-S3 v4.06 (= ESP32-Multiswitch-Basis
                  V3/TXRX, Ziege-One / Der RC-Modellbauer, mit S3-Teilen)
    Soundteil   = ESP32-Sound-Basis_Ziege-One v7.21 (24 Sounds + Motor von
@@ -26,67 +27,7 @@
    4 = CRSF (ExpressLRS / TBS CrossFire, bidirektional)
  Lua-Konfiguration und Modulkette gibt es nur bei CRSF.
 
- NEU v1.09: Lua "LED Farbfolge" hatte dieselbe Feld-ID 86 wie der Ordner
-   "Motor". Das Lua zeigte die LED-Einstellung dadurch doppelt, der Ordner
-   "Motor" fehlte. Das Feld hat jetzt eine eigene ID direkt hinter dem
-   letzten Feld (Sound-Zuordnung) und steht weiter im Ordner "Global".
-
- NEU v1.08: Status-LED mit demselben Farbschema wie alle Module (RC_Common
-   1.4.0): gruen langsam = OK, rot schnell = Failsafe / kein RC-Link, rot
-   Aufblitzen = kein Signal (vorher aus), blau Doppelblitz = doppelte
-   Moduladresse, violett statt gruen/rot = WLAN an. Lua Global > "LED
-   Farbfolge" (NVS "ledrgb", Vorgabe GRB fuer den DevKitC-1).
-   BOOT-Taster 2 s halten (vorher 3 s) schaltet das WLAN, wie beim Router.
-
- NEU v1.07: Sound-Dateien behalten ihren Namen (Umlaute/Leerzeichen ersetzt).
-   Welche Datei auf welchem Platz spielt, steht in der Konfiguration
-   (sound_map.h). Neuer Web-Tab "Speicher" mit Auswahlliste je Platz,
-   im Lua der Ordner "Sound-Zuordnung" (Platz, Datei, Groesse).
-
- NEU v1.06: Lua zeigt das RC-System nur noch an ("ELRS CRSF (Web aendern)").
-   Umstellen auf SBUS per Lua haette das Lua abgeschaltet, das geht jetzt
-   nur noch in der Web-UI. SBUS-Felder sind im Lua weiter ausgeblendet.
-
- NEU v1.05: Lua-Menue uebersichtlicher (RC_Common 1.3.0):
-   - Lange Auswahlfelder (RC-System, Ausgang-Quelle, UART-Baudrate) kommen
-     Chunk fuer Chunk wie vom Sender angefragt (Fix aus RC_Common 1.2.1).
-     Vorher zeigte das ELRS-Lua ihren Wert nicht oder unvollstaendig.
-   - Ordnernamen zeigen den aktuellen Wert, z. B. "Ausgang 1 (Kanal_L 5)",
-     "Sound 3 (L 5)", "Motor (Aus)", "Einstellungen (ELRS CRSF)",
-     "UART B/C (GPS, Aus)", "Global (Adr 0)".
-   - Unpassende Felder werden ausgeblendet (CRSF hidden, Feld-IDs bleiben):
-     reine SBUS-Felder (Global "SBUS EK Kanal", vorher "CRSF Kanal",
-     Sound EK Kanal/Mode, SBUS-Gruppe 1/2), Blinkzeiten bei Dauerlicht,
-     PWM Festwert bei MWprop, Kanal Nr bei Dauer/Aus, Kanal Speed bei
-     Deaktiviert, Baudrate bei Port "Aus". Ein Lua ohne hidden-Kennung
-     zeigt alles wie bisher.
-   - Versionszeile im Lua zeigt die richtige Version (vorher "v1.00").
-
- NEU v1.04: SD-Karte als USB-Laufwerk (usb_drive.cpp). Buchse "USB" an
-   einen PC: die Karte erscheint als Laufwerk, Sounds per Explorer kopieren.
-   Solange das Laufwerk am PC haengt, ist der Sound pausiert; "Auswerfen"
-   oder Abziehen gibt die Karte ans Modul zurueck. Braucht in der Arduino
-   IDE Werkzeuge > USB Mode = "USB-OTG (TinyUSB)" (sonst ohne Laufwerk).
-
- NEU v1.01: baut auch mit esp32-Core 3.3.x (BOOT_PIN heisst jetzt
-   BOOT_BTN_PIN, weil der neue Core BOOT_PIN selbst definiert).
-
- NEU v1.00 (Entscheidungen vom 21.-28.10.2026):
-   - Zwei Adressen: "Switch Addr" (Lua 3) fuer die Ausgaenge, zugleich
-     CRSF-Geraeteadresse 0xC0+Adresse, und "Sound-Adresse" (Lua 100) fuer
-     die Einkanal-Sounds (Quelle EK). Gleiche Zahl = dieselben Schalter
-     schalten Ausgaenge und Sounds.
-   - Status-LED in der Web-UI waehlbar: IO48 (DevKitC-1 v1.0, Vorgabe) oder
-     IO38 (v1.1). Wirkt nach einem Neustart.
-   - Lua-Menue zeigt die ersten 8 Sounds, in der Web-UI auf 12/16/20/23
-     erhoehbar (Neustart). Mehr als 23 gehen nicht: das Lua-Menue hat
-     hoechstens 255 Felder. In der Web-UI sind immer alle 24 Sounds da.
-   - Name je Sound (16 Zeichen, Vorgabe "Sound N"), Anzeige "N Name",
-     gespeichert in Einstellungen, Export und Backups. Ausgaenge heissen
-     wie bisher "Ausgang 1".."Ausgang 8" und sind umbenennbar.
-   - Export, Flash-Backup und SD-Sicherung enthalten Schalt- und Soundteil.
-     Alte Sicherungen vom Multiswitch oder von der Sound-Basis lassen sich
-     einspielen (jeweils nur ihr Teil).
+ Versionsgeschichte: siehe CHANGELOG.md im Hauptordner des Repos.
 
  Lua-Felder:
      0-85   wie RC-Multiswitch v4.06 (Global, Ausgang 1-8, WLAN, UART B/C)
@@ -105,7 +46,7 @@
 /*
   Bolder Flight Systems SBUS  8.1.4   (für RC_System 0-3)
   TinyGPSPlus 1.0.3                   (v4.04: Rolle GPS auf UART B/C)
-  RC_Common 1.3.0 im Sketch-Ordner src/RC_Common/, enthaelt
+  RC_Common 1.4.0 im Sketch-Ordner src/RC_Common/, enthaelt
     CRSF_ESP32 1.1.0, Basis https://github.com/Ziege-One/CRSF_ESP32
 */
 
@@ -132,14 +73,6 @@
 #include "usb_drive.h"                      // v1.04: SD-Karte als USB-Laufwerk
 
 constexpr uint16_t Version = 109; // 1.09 - CRSF Parameter Version Number
-// v1.08: Status-LED einheitlich (RC_Common 1.4.0), Lua "LED Farbfolge", BOOT 2 s.
-// v1.07: Sound-Zuordnung (Originalnamen, Web-Tab Speicher, Lua-Ordner).
-// v1.06: Lua: RC-System nur Anzeige (Umstellen nur in der Web-UI).
-// v1.05: Lua: Chunk-Fix (RC_Common 1.3.0), Werte in Ordnernamen, unpassende Felder ausgeblendet.
-// v1.04: SD-Karte als USB-Laufwerk am PC (usb_drive.cpp, USB Mode "USB-OTG (TinyUSB)").
-// v1.03: Lua: "PWM Festwert" bleibt bei PWM Modus MWprop ein Zahlenfeld (gesperrt) statt Info-Feld - sonst erst nach Menue-Verlassen einstellbar.
-// v1.02: Lua: Sound-Kanal-Felder bleiben bei Aus/Dauer Zahlenfelder (gesperrt)
-//        statt Info "Deaktiviert" - sonst erst nach Menue-Verlassen aenderbar.
 uint16_t fwVersion() { return Version; }   // fuer sound_web.cpp
 
 // ======== SBUS-Schwellen (benannte Konstanten) ==================
