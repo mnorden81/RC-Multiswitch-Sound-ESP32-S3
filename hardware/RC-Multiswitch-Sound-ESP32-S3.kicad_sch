@@ -6,8 +6,8 @@
 	(paper "A3")
 	(title_block
 		(title "RC Multiswitch + Sound ESP32-S3 (TBD62083APG, I2S, microSD)")
-		(date "2026-10-19")
-		(rev "v0.9")
+		(date "2026-11-17")
+		(rev "v0.10")
 		(comment 1 "Entwurf - vor Layout/Bestellung pruefen")
 		(comment 2 "v0.2: TPA3118 (HW-327, mono) statt TPA3116D2, Mono-Mix R18/R19, J10/J11")
 		(comment 3 "v0.3: MAX98357A (J3, J4, R17, AMP_SD, GAIN_SEL) entfernt")
@@ -6513,7 +6513,7 @@
 		)
 		(uuid "1632cd58-a5b5-4a7c-bca6-48d60752cc76")
 	)
-	(label "S4"
+	(label "S3"
 		(at 152.4 111.76 180)
 		(effects
 			(font
@@ -6523,7 +6523,7 @@
 		)
 		(uuid "1a5a0824-0457-4703-a808-869a30e08be0")
 	)
-	(label "S2"
+	(label "S5"
 		(at 152.4 116.84 180)
 		(effects
 			(font
@@ -6543,7 +6543,7 @@
 		)
 		(uuid "1e46ae2d-dc91-40fb-a1d2-c5937677e39d")
 	)
-	(label "S0"
+	(label "S7"
 		(at 152.4 121.92 180)
 		(effects
 			(font
@@ -6753,7 +6753,7 @@
 		)
 		(uuid "69e557b7-75ad-430a-9696-be611e69e864")
 	)
-	(label "S5"
+	(label "S2"
 		(at 152.4 109.22 180)
 		(effects
 			(font
@@ -7093,7 +7093,7 @@
 		)
 		(uuid "ba98f77f-937c-4bdd-ac73-65ec7b7bc91d")
 	)
-	(label "S1"
+	(label "S6"
 		(at 152.4 119.38 180)
 		(effects
 			(font
@@ -7143,7 +7143,7 @@
 		)
 		(uuid "cff9a55c-958a-47c4-8754-d1666e74d870")
 	)
-	(label "S6"
+	(label "S1"
 		(at 152.4 106.68 180)
 		(effects
 			(font
@@ -7193,7 +7193,7 @@
 		)
 		(uuid "e1b0fa24-66e3-47e2-be18-a4c3e774eb87")
 	)
-	(label "S3"
+	(label "S4"
 		(at 152.4 114.3 180)
 		(effects
 			(font
@@ -7263,7 +7263,7 @@
 		)
 		(uuid "ed4fc0b5-9033-43e9-b33f-aad934e1b841")
 	)
-	(label "S7"
+	(label "S0"
 		(at 152.4 104.14 180)
 		(effects
 			(font
