@@ -36,6 +36,7 @@ Gesperrt: IO0/3/45/46 (Strapping), IO19/20 (USB), IO26-37 (Flash/PSRAM), IO43/44
 
 ## Hinweise
 - TPA3118-Modul: Betriebsspannung 3S (9-12,6 V) liegt im Bereich des Moduls (8-24 V), Elkos 25 V unkritisch; unter 8 V schaltet es nicht zuverlaessig. Leistung bei 12 V nur einige Watt an 4-8 Ohm. Der Verstaerker kann mehrere Ampere ziehen, die Leiterbahnen (Breite!) von VLOAD zu den Modul-Pads und CN4 (JST PH, ca. 2 A je Kontakt) pruefen. Mono: ein Lautsprecher (4-8 Ohm), BTL-Ausgang, keine Masse am Lautsprecher.
+- **v0.10 (2026-11-17): Kanalreihenfolge am Treiber U2 korrigiert.** Bis v0.9 lagen S0..S7 an den U2-Eingaengen I8..I1 (verkehrt herum), dadurch schaltete Ausgang n an J1 den Stecker OUT(9-n) (z. B. Ausgang 6 -> OUT3), waehrend der Aufdruck an J1 die 1 an Pin 1 zeigt. Jetzt S0 -> I1 ... S7 -> I8, also Ausgang n -> OUTn. **PCB:** per F8 uebernehmen, die 8 Leitungen ESP -> U2 Pin 1-8 neu verlegen. Bereits gebaute v0.9-Platinen: Stecker n = Ausgang (9-n).
 - Aenderungen v0.2 bis v0.8: TPA3118 statt TPA3116D2, MAX98357A samt J3/J4/R17 entfernt, J7 (Setup) und J8 (SD-Jumper) entfernt, SD fest an 3V3, PCM5102A-Ausgangspads als J2 Pin 7-10, J10/R18/R19 entfallen (mono), J11 Eingang des TPA3118. Im PCB per F8 uebernehmen, hardware/*.pdf ist noch v0.1.
 - ESP wird ueber den 5V-Pin versorgt. Nicht gleichzeitig USB und BEC anschliessen, ohne zu pruefen, ob das Board eine Schutzdiode hat.
 - Kein ERC/DRC im Entstehungs-Sandkasten (nur KiCad-CLI 7) und keine Firmware getestet. Bitte ERC in KiCad ausfuehren.
