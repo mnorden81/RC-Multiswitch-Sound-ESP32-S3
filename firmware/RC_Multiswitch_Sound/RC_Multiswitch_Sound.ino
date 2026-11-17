@@ -1103,6 +1103,8 @@ static void Output(uint16_t d) {
 }
 
 // ======== Setup =================================================
+void diagSetup();       // DIAGNOSE (diag.cpp)
+void diagLoop();
 void setup() {
     Serial.begin(115200);
     nvsLoad();
@@ -1160,6 +1162,7 @@ void setup() {
     Serial.printf("RC-Multiswitch-Sound %s v%d.%02d\n", BOARD_NAME, Version / 100, Version % 100);
     Serial.printf("SSID: %s\n", g_wifi_ssid);
     Serial.printf("IP:   %s\n", AP_IP_STR);
+    diagSetup();         // DIAGNOSE: SD-Inhalt, Einstellungen, Piepton
 }
 
 // ======== Loop ==================================================
@@ -1174,6 +1177,7 @@ void loop() {
     soundSavePending();
     usbDriveLoop();      // v1.04: vor soundLoop(), gibt die SD-Karte ab/zurueck
     soundLoop();
+    diagLoop();          // DIAGNOSE: Statuszeile + Befehle t/1/m
 
     if (RC_System_boot == 4) {
         crsf.read_packets(0);

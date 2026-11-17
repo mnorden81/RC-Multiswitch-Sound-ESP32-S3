@@ -19,7 +19,14 @@ WavHeader_Struct WavHeader; // Used as a place to store the header data from the
 // Einheitlicher Schalter fuer die sonst unbedingten, haeufigen
 // Debug-Ausgaben (Play()/Init()/WAV-Header-Dump). Standardmaessig aus;
 // ueber ein #define hier oder spaeter einen Web-/CRSF-Schalter aktivierbar.
-bool g_audioDebug = false;
+bool g_audioDebug = true;   // DIAGNOSE: an
+
+// ---- DIAGNOSE (nur Zweig zur Fehlersuche, nicht fuer main) ----------------
+volatile uint32_t g_diagToneLeft  = 0;   // restliche Samples des Pieptons
+volatile uint32_t g_diagI2sBlocks = 0;   // an I2S uebergebene Bloecke
+volatile uint32_t g_diagI2sErrors = 0;   // fehlerhafte i2s_write()
+volatile int32_t  g_diagPeak      = 0;   // hoechster Mischpegel seit letzter Ausgabe
+void diagBeep(uint32_t ms) { g_diagToneLeft = (uint32_t)((uint64_t)SAMPLES_PER_SEC * ms / 1000); }
 
 static portMUX_TYPE s_ringInitMux = portMUX_INITIALIZER_UNLOCKED;
 
@@ -677,6 +684,9 @@ XT_I2S_Class::XT_I2S_Class(uint8_t LRCLKPin, uint8_t BCLKPin, uint8_t I2SOutPin,
     pin_config.ws_io_num = LRCLKPin;
     pin_config.data_out_num = I2SOutPin;
     pin_config.data_in_num = I2S_PIN_NO_CHANGE;
+    // Kein MCLK-Ausgang (wie Sound Mini): sonst laege der Master-Takt auf
+    // GPIO0 (BOOT-Taster). Der PCM5102A erzeugt seinen Takt aus BCK (SCK an GND).
+    pin_config.mck_io_num = I2S_PIN_NO_CHANGE;
 
     PortNum = PassedPortNum;
 
@@ -733,6 +743,8 @@ XT_I2S_Class::XT_I2S_Class(uint8_t LRCLKPin, uint8_t BCLKPin, uint8_t I2SOutPin,
 
                         // Schreib direkt aus ringBuffer[idx]
                         esp_err_t res = i2s_write(I2S_NUM_0, (const void*)ringBuffer[idx], SLOT_BYTES, &bytesWritten, pdMS_TO_TICKS(100));
+                        g_diagI2sBlocks++;
+                        if (res != ESP_OK || bytesWritten != SLOT_BYTES) g_diagI2sErrors++;
                         if (res != ESP_OK || bytesWritten != SLOT_BYTES)
                         {
                             // Schreibfehler: logge und trotzdem geben wir Slot frei, damit Consumer kann fortfahren.
@@ -1046,7 +1058,9 @@ uint32_t XT_I2S_Class::MixSamples()
    	RightMix = ApplyCompressor(RightMix);
 
 
-    MixedSample = (LeftMix << 16) | (RightMix);
+    // Rechter Kanal auf 16 Bit maskieren: ein negativer Wert haette sonst
+    // per Vorzeichen die oberen 16 Bit (linker Kanal) mit 0xFFFF ueberschrieben.
+    MixedSample = ((uint32_t)(uint16_t)LeftMix << 16) | (uint16_t)RightMix;
     return MixedSample;
 }
 
@@ -1102,6 +1116,26 @@ void XT_I2S_Class::FillBuffer()
     for (size_t i = 0; i < SLOT_WORDS; ++i)
     {
         tmpSlot[i] = MixSamples();
+        int32_t l = (int16_t)(tmpSlot[i] >> 16), r = (int16_t)(tmpSlot[i] & 0xFFFF);
+        if (l < 0) l = -l;
+        if (r < 0) r = -r;
+        if (l > g_diagPeak) g_diagPeak = l;
+        if (r > g_diagPeak) g_diagPeak = r;
+    }
+
+    // DIAGNOSE: Piepton 1 kHz direkt in den Puffer (ohne SD-Karte/WAV)
+    if (g_diagToneLeft > 0)
+    {
+        static float ph = 0.0f;
+        const float step = 2.0f * 3.14159265f * 1000.0f / SAMPLES_PER_SEC;
+        for (size_t i = 0; i < SLOT_WORDS; ++i)
+        {
+            int16_t v = (int16_t)(8000.0f * sinf(ph));
+            ph += step;
+            if (ph > 6.2831853f) ph -= 6.2831853f;
+            tmpSlot[i] = ((uint32_t)(uint16_t)v << 16) | (uint16_t)v;
+        }
+        g_diagToneLeft = (g_diagToneLeft > SLOT_WORDS) ? g_diagToneLeft - SLOT_WORDS : 0;
     }
 
     // Schreibe kompletten Slot (blockierend mit Timeout)
