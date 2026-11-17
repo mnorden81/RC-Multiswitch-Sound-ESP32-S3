@@ -600,7 +600,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R3"
-			(at 3.81 0 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "f63df9c9-8a51-40a0-81dc-a059741d3f44")
 			(effects
@@ -1630,7 +1630,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R5"
-			(at 3.86 0 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "1aeeb8ff-ec0e-491b-805e-26142bb6c6a4")
 			(effects
@@ -3273,7 +3273,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R1"
-			(at 3.86 -0.05 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "966dddff-2076-43e5-a77d-2e1421ac21b9")
 			(effects
@@ -3571,7 +3571,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R7"
-			(at 3.81 0 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "1be4886b-bb06-4fa2-a171-f4035275fe08")
 			(effects
@@ -5076,7 +5076,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R2"
-			(at 3.81 0 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "15853bb6-887a-46c0-8502-56f1b5ca7489")
 			(effects
@@ -7743,7 +7743,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R4"
-			(at 3.81 0 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "67379322-eae6-46b2-9b2f-bc32d9b5160b")
 			(effects
@@ -32777,7 +32777,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R8"
-			(at 3.81 0 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "bea8e347-2ec0-4631-a6ff-7e20cd3bbb7f")
 			(effects
@@ -32981,7 +32981,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R6"
-			(at 3.81 0 270)
+			(at 3.81 0 90)
 			(layer "F.SilkS")
 			(uuid "c89ae3d8-f52a-4b5e-a2e1-1ae50377cb28")
 			(effects
@@ -36970,7 +36970,7 @@
 		)
 	)
 	(gr_text "LED2"
-		(at 239.3 81.4 0)
+		(at 239.3 81.0 0)
 		(layer "F.SilkS")
 		(uuid "38c5265d-d37c-4ade-a5f4-55c1365a67b9")
 		(effects
@@ -36978,7 +36978,6 @@
 				(size 1 1)
 				(thickness 0.1)
 			)
-			(justify left bottom)
 		)
 	)
 	(gr_text "TBD62083APG"
@@ -37008,7 +37007,7 @@
 		)
 	)
 	(gr_text "LED5"
-		(at 234.3 97.6 0)
+		(at 234.3 97.2 0)
 		(layer "F.SilkS")
 		(uuid "47fe4edc-3d6d-4127-85d1-78214caf6f89")
 		(effects
@@ -37016,11 +37015,10 @@
 				(size 1 1)
 				(thickness 0.1)
 			)
-			(justify left bottom)
 		)
 	)
 	(gr_text "LED3"
-		(at 244.3 81.4 0)
+		(at 244.3 81.0 0)
 		(layer "F.SilkS")
 		(uuid "5bb0984e-cc55-4373-8347-da24a34884ea")
 		(effects
@@ -37028,7 +37026,6 @@
 				(size 1 1)
 				(thickness 0.1)
 			)
-			(justify left bottom)
 		)
 	)
 	(gr_text "+ - \n"
@@ -37070,7 +37067,7 @@
 		)
 	)
 	(gr_text "LED6"
-		(at 239.3 97.6 0)
+		(at 239.3 97.2 0)
 		(layer "F.SilkS")
 		(uuid "7193e386-edce-498c-97bc-363496accb3b")
 		(effects
@@ -37078,11 +37075,10 @@
 				(size 1 1)
 				(thickness 0.1)
 			)
-			(justify left bottom)
 		)
 	)
-	(gr_text "LED8\n"
-		(at 249.3 97.6 0)
+	(gr_text "LED8"
+		(at 249.3 97.2 0)
 		(layer "F.SilkS")
 		(uuid "82c2ce79-be2e-44be-9b0e-e1ecfe83676b")
 		(effects
@@ -37090,7 +37086,6 @@
 				(size 1 1)
 				(thickness 0.1)
 			)
-			(justify left bottom)
 		)
 	)
 	(gr_text "Micro-SD"
@@ -37107,7 +37102,7 @@
 		)
 	)
 	(gr_text "LED7"
-		(at 244.3 97.6 0)
+		(at 244.3 97.2 0)
 		(layer "F.SilkS")
 		(uuid "910756c9-a156-4d00-a634-33ff61207067")
 		(effects
@@ -37115,7 +37110,6 @@
 				(size 1 1)
 				(thickness 0.1)
 			)
-			(justify left bottom)
 		)
 	)
 	(gr_text "A (IN)\nTX RX + -"
@@ -37130,8 +37124,8 @@
 			)
 		)
 	)
-	(gr_text "LED1\n"
-		(at 234.3 81.4 0)
+	(gr_text "LED1"
+		(at 234.3 81.0 0)
 		(layer "F.SilkS")
 		(uuid "95092289-dbcd-43ee-9cab-286fb0f581f2")
 		(effects
@@ -37167,7 +37161,7 @@
 		)
 	)
 	(gr_text "LED4"
-		(at 249.3 81.4 0)
+		(at 249.3 81.0 0)
 		(layer "F.SilkS")
 		(uuid "a9d68de6-4ac6-4ecd-a334-a74cf1449947")
 		(effects
@@ -37175,7 +37169,6 @@
 				(size 1 1)
 				(thickness 0.1)
 			)
-			(justify left bottom)
 		)
 	)
 	(gr_text "5"
