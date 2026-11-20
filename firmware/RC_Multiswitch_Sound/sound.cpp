@@ -448,7 +448,7 @@ static void    luaSetSelPlayMode(uint8_t, uint8_t v){ luaSetPlayMode(luaSndSel, 
 static uint8_t luaGetSelTest(uint8_t)               { return luaGetTest(luaSndSel); }
 static void    luaSetSelTest(uint8_t, uint8_t v)    { luaSetTest(luaSndSel, v); }
 
-// Ordner fi = 112, Felder 113-119, danach Sound-Zuordnung 120-123
+// Ordner fi = SND_LUA_FIRST_ID (51), Felder 52-58, danach Sound-Zuordnung 59-62
 void soundLuaSounds(LuaMenu& m) {
     {
         size_t len = 0;

@@ -1,0 +1,31 @@
+{
+  "title": "RC-Multiswitch-Sound Prüfstand",
+  "firmwares": [
+    {
+      "id": "mss",
+      "name": "RC-Multiswitch-Sound",
+      "dir": "firmware/RC_Multiswitch_Sound",
+      "page": {"file": "webui_page.h", "var": "WEBUI_HTML"},
+      "mock": "mock_ms_sound.js",
+      "mock_uses": ["mock_multiswitch.js"],
+      "version": "Version",
+      "lua": {
+        "files": ["src/RC_Common/rc_common.h", "src/RC_Common/uart_roles.h", "src/RC_Common/funk_link.h", "board_config.h", "sound.h", "sound_map.h", "sound_map.cpp", "sound.cpp", "RC_Multiswitch_Sound.ino"],
+        "expect_max": "CRSF_PARAM_COUNT"
+      },
+      "api": {
+        "GET /api/status": "handleStatus",
+        "GET /api/config": "handleConfig",
+        "GET /api/sconfig": "buildSoundJson",
+        "GET /api/debug": "handleDebug",
+        "GET /api/soundfiles": "handleSoundFiles"
+      },
+      "api_files": ["src/RC_Common/*.h", "*.h", "*.cpp", "*.ino", "!XT_I2S*", "!usb_drive*"],
+      "api_init": ["nvsReset", "soundResetConfig"],
+      "export": ["BOARD_NAME", "UART_A_RX", "UART_A_TX", "OutPin?", "Ausgang_Name", "Ausgang_Kanal"],
+      "variants": [
+        {"id": "s3", "name": "ESP32-S3 Kombi", "defines": {"CONFIG_IDF_TARGET_ESP32S3": "1"}}
+      ]
+    }
+  ]
+}
