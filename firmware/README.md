@@ -52,10 +52,13 @@ Das DevKitC mit der Buchse **USB** (nicht "UART") an den PC stecken. Nach etwa e
 | 86-98 | Motor |
 | 99-110 | Einstellungen: Sound-Adresse, RC-System, Sound-Einkanal (SBUS), Gruppenadressen, SBUS-Gruppen, WLAN jetzt |
 | 111 | Geraetename |
-| ab 112 | Sound 1 bis n, je 6 Felder; n = 8 (Vorgabe), 12, 16, 20 oder 23 (Web-UI, Reiter RC-System, Karte Kombimodul) |
+| 112-119 | Ordner "Sounds" (v1.10): Sound Nr (1-24, nur Auswahl), Name, Quelle, Kanal Nr, Volumen, Wiedergabe Mode, Test Sound |
+| 120-123 | Sound-Zuordnung (Platz, Datei, Groesse) |
+| 124 | LED Farbfolge (im Ordner Global) |
+| 125-132 | Funk (v1.10): Betrieb, Kennung, Kanal, Leistung, Kanaele alle, Rueckkanal, Verbindung |
 
-Mehr als 23 Sounds passen nicht ins Lua-Menue (hoechstens 255 Felder). In der Web-UI sind immer alle 24 Sounds einstellbar.
+Seit v1.10 sind im Lua alle 24 Sounds erreichbar (vorher hoechstens 23, einstellbar in der Web-UI). Der Ordner "Sounds" ist in allen Soundmodulen gleich.
 
 ## Bekannte Grenzen
 - SBUS: Ohne Frames gilt das Signal nach 10 s als weg (Wert des Schaltteils, die Sound-Basis hatte 2 s). Bis dahin laufen Sounds weiter.
-- RC-System, UART B/C, Status-LED und die Zahl der Lua-Sounds wirken erst nach einem Neustart.
+- RC-System (auch Funk), UART B/C und Status-LED wirken erst nach einem Neustart.

@@ -30,11 +30,11 @@ static constexpr int    SND_FILE_SLOTS     = 3 + RCSOUND_NUM_SOUNDS;
 static constexpr size_t SND_NAME_MAX_BASE  = 40;   // SD-Karte: Name ohne ".wav"
 static constexpr size_t SND_FILE_LEN       = 48;   // >= SND_NAME_MAX_BASE + ".wav" + Null
 
-// Im Lua-Menue hoechstens 23 Sounds: das Menue hat max. 255 Eintraege mit
-// einer 8-Bit-Feld-ID (CRSF), ab Feld 112 mit je 6 Feldern endet Sound 23
-// bei Feld 249. In der Web-UI sind immer alle 24 Sounds einstellbar.
+// v1.10: im Lua-Menue ein Ordner "Sounds" (Feld 112) mit Auswahl "Sound Nr"
+// fuer alle 24 Sounds (Felder 113-119), danach die Sound-Zuordnung
+// (120-123). Gleich in allen Soundmodulen.
 static constexpr uint8_t SND_LUA_FIRST_ID  = 112;
-static constexpr uint8_t SND_LUA_MAX       = 23;
+static constexpr uint8_t SND_LUA_FIELDS    = 8 + 4;   // Sounds-Ordner + Sound-Zuordnung
 
 struct SoundConfig {
     int Source_Start_Sound[SND_NUM_SLOTS];   // Quelle Motor(0) + Sound 1-24
@@ -96,7 +96,7 @@ bool soundEngineRunning();     // v1.07: Motor laeuft (Leerlauf-Schleife)
 // "Einstellungen" baut der Schaltteil, die Lese-/Schreibfunktionen des
 // Soundteils stehen hier.
 void soundLuaMotor(LuaMenu& m, uint8_t folderId);
-void soundLuaSounds(LuaMenu& m, uint8_t count);
+void soundLuaSounds(LuaMenu& m);   // v1.10: Ordner "Sounds" + Sound-Zuordnung ab SND_LUA_FIRST_ID
 uint8_t sndLuaGetAddr(uint8_t);
 void    sndLuaSetAddr(uint8_t, uint8_t v);
 uint8_t sndLuaGetEkChannel(uint8_t);

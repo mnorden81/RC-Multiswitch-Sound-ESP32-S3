@@ -121,6 +121,8 @@ static const char* rcName(int sys) {
         case 2: return "ELRS SBUS";
         case 3: return "HoTT SBUS";
         case 4: return "CRSF";
+        case 5: return "CRSF + Funk (Zentrale)";   // v1.10
+        case 6: return "CRSF aus Funk (Teilnehmer)";
         default: return "Unbekannt";
     }
 }
@@ -220,7 +222,8 @@ static void handleStatus() {
         j += ",\"kmh\":"  + String(gpsGetSpeedKmh(), 1) + "}";
     }
     j += "},";
-    j += "\"wifi_ap_active\":" + String(webui_isApActive() ? "true" : "false");
+    j += "\"wifi_ap_active\":" + String(webui_isApActive() ? "true" : "false") + ",";
+    j += "\"funk\":" + funk.summaryJson();   // v1.10: Funk (null ohne Funk)
 
     j += "}";
     sendJson(j);
@@ -261,10 +264,12 @@ static void handleConfig() {
         j += "\"has_portc\":false,";
 #endif
         j += "\"portc_dup\":" + String(g_ports[1].duplicate ? "true" : "false") + ",";
-        // v1.00: Kombimodul (wirken nach Neustart)
-        j += "\"lua_sounds\":" + String(g_lua_sounds) + ",";
-        j += "\"lua_sounds_max\":" + String(SND_LUA_MAX) + ",";
-        j += "\"led_pin\":" + String(g_led_pin);
+        // v1.00: Kombimodul (wirkt nach Neustart)
+        j += "\"led_pin\":" + String(g_led_pin) + ",";
+        // v1.10: Funk (wirkt nach Neustart)
+        j += "\"funk_id\":" + String(g_funk.id) + ",\"funk_ch\":" + String(g_funk.ch);
+        j += ",\"funk_pwr\":" + String(g_funk.pwr) + ",\"funk_rate\":" + String(g_funk.rateMs);
+        j += ",\"funk_back\":" + String(g_funk.back ? "true" : "false");
         j += "}";
         sendJson(j);
         return;
@@ -276,8 +281,21 @@ static void handleConfig() {
 
     int v = 0;
     if (webJsonInt(body, "rc_system", v)) {
-      v = constrain(v, 0, 4);
+      v = constrain(v, 0, 6);   // v1.10: 5 = Funk-Zentrale, 6 = Funk-Teilnehmer
       if (v != RC_System) { RC_System = v; changed = true; }
+    }
+    // v1.10: Funk-Einstellungen (wirken nach Neustart)
+    {
+      FunkConfig fc = g_funk;
+      bool fb = fc.back;
+      if (webJsonInt(body, "funk_id", v))   fc.id     = (uint8_t)constrain(v, 1, 255);
+      if (webJsonInt(body, "funk_ch", v))   fc.ch     = (uint8_t)constrain(v, 1, 13);
+      if (webJsonInt(body, "funk_pwr", v))  fc.pwr    = (uint8_t)constrain(v, 2, 20);
+      if (webJsonInt(body, "funk_rate", v)) fc.rateMs = (uint8_t)constrain(v, 0, 50);
+      if (webJsonBool(body, "funk_back", fb)) fc.back = fb;
+      funkConfigClamp(fc);
+      if (fc.id != g_funk.id || fc.ch != g_funk.ch || fc.pwr != g_funk.pwr ||
+          fc.rateMs != g_funk.rateMs || fc.back != g_funk.back) { g_funk = fc; changed = true; }
     }
     if (webJsonInt(body, "crsf_channel", v)) {
       if ((v >= 0 && v <= 15) || v == 999) {
@@ -290,7 +308,7 @@ static void handleConfig() {
     }
     if (webJsonInt(body, "modul_adress", v)) {
       v = constrain(v, 0, 20);
-      if (v != modul_adress) { modul_adress = v; changed = true; }
+      if (v != modul_adress) { modul_adress = v; applyModulAddress(); changed = true; }   // v1.10: sofort
     }
     // NEU V3.00: MKan-Gruppen (CRSF-Adresse bzw. SBUS-Kanal/-Modus je Gruppe)
     if (webJsonInt(body, "ek_gadr0", v)) {
@@ -343,11 +361,7 @@ static void handleConfig() {
       }
     }
 
-    // v1.00: Lua-Sounds und Status-LED-Pin (wirken nach Neustart)
-    if (webJsonInt(body, "lua_sounds", v)) {
-      uint8_t n = clampLuaSounds(v);
-      if (n != g_lua_sounds) { g_lua_sounds = n; changed = true; }
-    }
+    // v1.00: Status-LED-Pin (wirkt nach Neustart). v1.10: "lua_sounds" entfaellt.
     if (webJsonInt(body, "led_pin", v)) {
       int lp = clampLedPin(v);
       if (lp != g_led_pin) { g_led_pin = lp; changed = true; }
@@ -583,7 +597,9 @@ void webui_enableAP() {
     if (!apIP.fromString(g_wifi_ip)) apIP.fromString("192.168.1.1");
     gw = apIP;
     WiFi.softAPConfig(apIP, gw, subnet);
-    WiFi.softAP(g_wifi_ssid, g_wifi_pass);
+    // v1.10: mit Funk auf dessen Kanal (ein Funkteil fuer beides)
+    WiFi.softAP(g_wifi_ssid, g_wifi_pass, funk.active() ? funk.channel() : 1);
+    funk.wifiChanged();
     g_apActive = true;
     Serial.printf("AP gestartet (Heap frei: %u Bytes), IP: %s\n",
                   (unsigned)ESP.getFreeHeap(), WiFi.softAPIP().toString().c_str());
@@ -591,7 +607,8 @@ void webui_enableAP() {
 
 void webui_disableAP() {
     if (!g_apActive) return;
-    WiFi.softAPdisconnect(true);
+    WiFi.softAPdisconnect(true);   // mit Funk bleibt die STA-Seite (ESP-NOW) an
+    funk.wifiChanged();
     g_apActive = false;
     Serial.println("AP gestoppt.");
 }
@@ -606,7 +623,8 @@ void webui_init() {
     // den Treiber/die Queues an, sendet aber noch nichts sichtbares - das
     // eigentliche Einschalten des Access Points (SSID sichtbar) macht weiterhin
     // ausschliesslich webui_enableAP().
-    WiFi.mode(WIFI_AP);
+    // v1.10: mit Funk AP + STA (ESP-NOW laeuft ueber die STA-Seite)
+    WiFi.mode(funk.active() ? WIFI_AP_STA : WIFI_AP);
 
     // NEU v2.02: WLAN dauerhaft an (g_wifi_always_on) uebersteuert den
     // GPIO13-Bootpin vollstaendig - siehe Kommentar bei g_wifi_always_on
@@ -630,6 +648,8 @@ void webui_init() {
     webCommonRegister(webServer, storageSave);
     // v4.06: Einstellungs-Backups im Flash (/api/backup/*, RC_Common)
     cfgBackupRegister(webServer);
+    // v1.10: /api/funk, /api/funk/reset (RC_Common funk_link)
+    funk.registerWeb(webServer);
     // v1.00: Routen des Soundteils (sound_web.cpp)
     soundWebRegister(webServer);
     // WebServer.begin() bewusst unabhaengig vom AP-Status: der Server lauscht
