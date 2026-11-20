@@ -160,3 +160,7 @@ Hochgeladene WAV-Dateien behalten ihren Namen. Umlaute werden ersetzt (ä → ae
 - PCB-Layout erstellen
 - Gehaeuse (hardware/gehaeuse/) am echten Aufbau pruefen: Hoehe Elko C1 (22 mm angenommen), ESP 13 mm ueber der Platine, Lage USB-C und microSD-Slot
 - Firmware auf der Platine testen (Ausgaenge, Sound, SD-Karte, Status-LED IO48/IO38)
+
+## Prüfstand (WebUI und Lua im Browser)
+
+In [`pruefstand/`](pruefstand/) liegt eine Seite, die die echte Weboberfläche und das Lua-Menü dieser Firmware im Browser zeigt (alle Varianten, Modul simuliert): [Prüfstand öffnen](https://raw.githack.com/mnorden81/RC-Multiswitch-Sound-ESP32-S3/main/pruefstand/pruefstand.html). Sie wird bei jeder Firmware-Änderung neu gebaut, die GitHub-Prüfung „Prüfstand" achtet darauf.
