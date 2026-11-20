@@ -59,6 +59,23 @@ main{max-width:560px;margin:0 auto;padding:20px 14px 60px}
 .badge-ok{background:#0d2c16;color:var(--green)}
 .badge-err{background:#2c0d0d;color:var(--red)}
 .badge-warn{background:#2c200d;color:var(--yellow)}
+/* v1.10: Funk */
+.funk-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.funk-name{font-size:17px;font-weight:700}
+.amp{width:14px;height:14px;border-radius:50%;background:var(--sub);flex:none}
+.amp.g{background:var(--green);box-shadow:0 0 8px var(--green)}
+.amp.y{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.amp.r{background:var(--red);box-shadow:0 0 8px var(--red)}
+.fstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.fstat div{background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:6px 8px}
+.fstat b{display:block;font-family:var(--mono);font-size:15px}
+.fstat span{font-size:11px;color:var(--sub)}
+.peer{border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;background:var(--surf2)}
+.peer-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.peer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 10px;font-size:12px}
+.peer-grid span{color:var(--sub);display:block;font-size:11px}
+.peer-grid b{font-family:var(--mono);font-weight:400}
+.mac{font-family:var(--mono);font-size:11px;color:var(--sub)}
 .sep{border:none;border-top:1px solid var(--border);margin:12px 0}
 .mono{font-family:var(--mono);font-size:12px}
 /* Output detail */
@@ -161,6 +178,7 @@ main{max-width:560px;margin:0 auto;padding:20px 14px 60px}
   <div class="tab" onclick="showTab('sounds')">Sounds</div>
   <div class="tab" onclick="showTab('store')">Speicher</div>
   <div class="tab" onclick="showTab('rc')">RC-System</div>
+  <div class="tab" id="tab-btn-funk" style="display:none" onclick="showTab('funk')">Funk</div>
   <div class="tab" onclick="showTab('wifi')">WiFi</div>
   <div class="tab" onclick="showTab('lipo')">LiPo</div>
   <div class="tab" onclick="showTab('debug')">Debug</div>
@@ -171,6 +189,9 @@ main{max-width:560px;margin:0 auto;padding:20px 14px 60px}
     <div class="grid" id="tile-grid"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn btn-ghost btn-sm" onclick="releaseAll()">🔓 Alle freigeben</button>
+    </div>
+    <div class="card" id="card-funk-ov" style="display:none;cursor:pointer" onclick="showTab('funk')">
+      <div style="display:flex;align-items:center;gap:8px"><span class="amp" id="ov-funk-amp"></span><span id="ov-funk-text"></span></div>
     </div>
     <div class="card" id="card-channels" style="display:none">
       <div class="card-title">RC-Kanalwerte</div>
@@ -418,6 +439,8 @@ main{max-width:560px;margin:0 auto;padding:20px 14px 60px}
           <option value="2">ELRS normiert (SBUS)</option>
           <option value="3">HoTT (SBUS)</option>
           <option value="4">CRSF (ELRS/TBS)</option>
+          <option value="5">CRSF + Funk senden (Zentrale)</option>
+          <option value="6">CRSF aus Funk (Teilnehmer)</option>
         </select>
       </div>
 
@@ -489,6 +512,36 @@ main{max-width:560px;margin:0 auto;padding:20px 14px 60px}
       </div>
 
       <span style="color:var(--sub);font-size:12px;display:block;margin-top:6px" id="rc-hint"></span>
+    </div>
+
+    <!-- v1.10 Funk: Einstellungen, nur bei RC-System 5/6 -->
+    <div class="card" id="card-funk-cfg" style="display:none">
+      <div class="card-title">Funk (ESP-NOW)</div>
+      <div class="row"><label>Fahrzeug-Kennung</label>
+        <input type="number" id="inp-funk-id" min="1" max="255" onchange="onFunkCfg()" style="width:90px">
+      </div>
+      <div class="row"><label>Funkkanal</label>
+        <select id="sel-funk-ch" onchange="onFunkCfg()"></select>
+      </div>
+      <div class="row"><label>Sendeleistung</label>
+        <select id="sel-funk-pwr" onchange="onFunkCfg()">
+          <option value="2">2 dBm</option><option value="5">5 dBm</option><option value="8">8 dBm</option>
+          <option value="11">11 dBm</option><option value="15">15 dBm</option><option value="20">20 dBm</option>
+        </select>
+      </div>
+      <div class="row" id="row-funk-rate"><label>Kanäle alle</label>
+        <select id="sel-funk-rate" onchange="onFunkCfg()">
+          <option value="0">jeder Frame</option><option value="5">5 ms</option><option value="10">10 ms</option>
+          <option value="20">20 ms</option><option value="50">50 ms</option>
+        </select>
+      </div>
+      <div class="row" id="row-funk-back"><label>Rückkanal</label>
+        <select id="sel-funk-back" onchange="onFunkCfg()">
+          <option value="1">An (Lua, Telemetrie)</option><option value="0">Aus (nur empfangen)</option>
+        </select>
+      </div>
+      <span style="color:var(--sub);font-size:12px;display:block;margin-top:6px" id="funk-help"></span>
+      <span style="font-size:12px;display:block;margin-top:6px" id="funk-hint"></span>
     </div>
 
     <!-- MKan-Gruppen (NEU V3.00): 2 zusaetzliche, unabhaengige Kanalquellen -->
@@ -589,6 +642,33 @@ main{max-width:560px;margin:0 auto;padding:20px 14px 60px}
   </div>
 
   <!-- WiFi -->
+  <!-- v1.10 Funk: Verbindungsqualitaet, jede Sekunde neu -->
+  <div id="tab-funk" style="display:none">
+    <div class="card">
+      <div class="funk-head">
+        <span class="amp" id="f-amp"></span>
+        <span class="funk-name" id="f-name"></span>
+        <span class="badge" id="f-role"></span>
+        <span class="badge" id="f-state"></span>
+      </div>
+      <div class="mac" id="f-sub" style="margin-top:6px"></div>
+      <div id="f-warn" style="display:none;margin-top:8px;color:var(--yellow);font-size:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Dieses Modul, pro Sekunde</div>
+      <div class="fstat" id="f-own"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="f-peers-title">Gegenstellen</div>
+      <div id="f-peers"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-ghost btn-sm" onclick="funkReset()">Zähler zurücksetzen</button>
+      </div>
+      <span style="color:var(--sub);font-size:12px;display:block;margin-top:8px">Ampel: grün = Verlust unter 1 % und RSSI über −75 dBm, gelb = bis 5 % oder bis −85 dBm, rot = schlechter.</span>
+    </div>
+  </div>
+
+
   <div id="tab-wifi" style="display:none">
     <div class="card">
       <div class="card-title">Zugangspunkt</div>
@@ -1023,9 +1103,8 @@ main{max-width:560px;margin:0 auto;padding:20px 14px 60px}
 
   <div class="card" id="c-kombi">
     <div class="card-title">Kombimodul <span style="color:var(--orange,#e3932a);font-size:10px;border:1px solid currentColor;border-radius:4px;padding:0 4px">NEU</span></div>
-    <div class="row"><label>Sounds im Lua-Men&uuml;</label><select id="k-luasnd"><option value="8">1-8 (Standard)</option><option value="12">1-12</option><option value="16">1-16</option><option value="20">1-20</option><option value="23">1-23 (Maximum)</option></select></div>
     <div class="row"><label>Status-LED</label><select id="k-led"><option value="48">IO48 (DevKitC-1 v1.0)</option><option value="38">IO38 (DevKitC-1 v1.1)</option></select></div>
-    <div style="font-size:12px;color:var(--sub);margin:4px 0 8px">In der Web-UI sind immer alle 24 Sounds einstellbar, im Lua-Men&uuml; h&ouml;chstens 23 (das Men&uuml; hat max. 255 Felder). Bleibt die Status-LED dunkel, auf IO38 umstellen. Beides wirkt nach einem Neustart.</div>
+    <div style="font-size:12px;color:var(--sub);margin:4px 0 8px">Bleibt die Status-LED dunkel, auf IO38 umstellen. Wirkt nach einem Neustart.</div>
     <button class="btn btn-primary" onclick="saveKombi()">Speichern</button>
   </div>
 <span id="sb-hv" hidden></span>
@@ -1039,7 +1118,7 @@ let state={},curOut=-1,pollTimer=null;
 const $ = id => document.getElementById(id);
 
 function showTab(t){
-  ['overview','outputs','rc','wifi','debug'].forEach(n=>{
+  ['overview','outputs','rc','funk','wifi','debug'].forEach(n=>{
     $('tab-'+n).style.display=(n===t?'block':'none');
   });
   document.querySelectorAll('.tab').forEach((el,i)=>{
@@ -1065,6 +1144,7 @@ async function fetchStatus(){
   if(apEl) apEl.textContent=d.wifi_ap_active?'an':'aus';
   renderTiles(d);
   if(curOut>=0) renderOutDetail(d,curOut);
+  showFunkSummary(d.funk);   // v1.10 Funk
   // Kanalwerte auf Startseite
   if(d.channels && d.bus_ok){
     $('card-channels').style.display='';
@@ -1210,7 +1290,7 @@ function renderOutDetail(d,i){
   const sb=$('out-state-big');
   sb.textContent=o.on?'AN':'AUS';
   sb.className='state-big '+(o.on?'state-on':'state-off');
-  const isCrsf=(state&&state.rc_system_boot===4);
+  const isCrsf=(state&&state.rc_system_boot>=4);   // v1.10: 5/6 sind CRSF
 
   // NEU V3.10: bis zu 3 Konfigurationen pro Ausgang, Prioritaet 1>2>3 -
   // Konfig1 = bisheriges kanal/mode/pwm, Konfig2/3 = kanal2/mode2/pwm2 bzw.
@@ -1298,6 +1378,96 @@ async function releaseAll(){
   fetchStatus();
 }
 
+// ─── v1.10 Funk (RC_Common funk_link, wie Multiswitch v5.04) ───────────────────────────
+function funkAmp(loss,rssi,ok){
+  if(!ok) return 'r';
+  if(loss<1&&rssi>-75) return 'g';
+  if(loss<=5&&rssi>=-85) return 'y';
+  return 'r';
+}
+function fmtLoss(v){return v.toFixed(1).replace('.',',')+' %';}
+function showFunkSummary(f){
+  const on=!!(f&&f.role);
+  $('tab-btn-funk').style.display=on?'':'none';
+  $('card-funk-ov').style.display=on?'':'none';
+  if(!on) return;
+  const n=f.peers;
+  $('ov-funk-amp').className='amp '+funkAmp(f.loss,f.rssi,f.connected);
+  $('ov-funk-text').textContent=f.connected
+    ?`Funk (${f.role}): verbunden, ${n} ${n===1?'Gegenstelle':'Gegenstellen'}, ${fmtLoss(f.loss)} Verlust`
+    :`Funk (${f.role}): keine Funk-Verbindung`;
+}
+function fillFunkCfg(d){
+  const s=$('sel-funk-ch');
+  if(!s.options.length) for(let c=1;c<=13;c++) s.add(new Option('Kanal '+c+([1,6,11].includes(c)?' (empfohlen)':''),c));
+  $('inp-funk-id').value=d.funk_id; s.value=d.funk_ch;
+  $('sel-funk-pwr').value=d.funk_pwr; $('sel-funk-rate').value=d.funk_rate;
+  $('sel-funk-back').value=d.funk_back?1:0;
+}
+function showFunkCfg(rc){
+  $('card-funk-cfg').style.display=(rc===5||rc===6)?'':'none';
+  $('row-funk-rate').style.display=rc===5?'':'none';
+  $('row-funk-back').style.display=rc===6?'':'none';
+  $('funk-help').textContent=rc===5
+    ?'Zentrale: Kanäle kommen vom Empfänger am Kabel und gehen zusätzlich in den Funk. Pro Fahrzeug genau eine Zentrale.'
+    :'Teilnehmer: Kanäle kommen aus dem Funk, der Kabel-Eingang (UART A) bleibt frei. Kennung und Kanal wie bei der Zentrale einstellen.';
+}
+async function onFunkCfg(){
+  const id=Math.max(1,Math.min(255,parseInt($('inp-funk-id').value)||1));
+  $('inp-funk-id').value=id;
+  await api('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({funk_id:id,funk_ch:parseInt($('sel-funk-ch').value),
+      funk_pwr:parseInt($('sel-funk-pwr').value),funk_rate:parseInt($('sel-funk-rate').value),
+      funk_back:$('sel-funk-back').value==='1'})});
+  const h=$('funk-hint');
+  h.innerHTML='Gespeichert, wirkt nach Neustart. <a href="#" onclick="restartForPorts();return false">Jetzt neu starten</a>';
+  h.style.color='var(--green)';
+}
+let funkTimer=null;
+function startFunkPoll(){fetchFunk();funkTimer=setInterval(fetchFunk,1000);}
+function stopFunkPoll(){clearInterval(funkTimer);}
+async function funkReset(){await api('/api/funk/reset',{method:'POST'});fetchFunk();}
+async function fetchFunk(){
+  const f=await api('/api/funk');
+  if(!f) return;
+  const ok=f.connected;
+  $('f-amp').className='amp '+funkAmp(f.loss,f.rssi,ok);
+  $('f-name').textContent=f.name+' @'+f.addr_nr;
+  $('f-role').textContent=f.role; $('f-role').className='badge badge-ok';
+  $('f-state').textContent=ok?'Funk-Verbindung da':'keine Funk-Verbindung';
+  $('f-state').className='badge '+(ok?'badge-ok':'badge-err');
+  $('f-sub').textContent=`Kennung ${f.id} · Kanal ${f.ch} · ${f.pwr} dBm · CRSF-Adresse ${f.addr} · MAC ${f.mac}`;
+  const w=[];
+  if(f.conflict) w.push('⚠ Funk-Konflikt: eine zweite Zentrale mit derselben Kennung ist im Funk. Pro Fahrzeug nur eine Zentrale.');
+  if(f.dup_addr) w.push('⚠ Adresskonflikt: eine Gegenstelle hat dieselbe CRSF-Adresse ('+f.addr+'). Ihre Lua-Menüs stören sich. Modul-Adresse im Reiter RC-System ändern.');
+  if(!ok&&f.role==='Teilnehmer') w.push('Failsafe: seit '+(f.lost_ms/1000).toFixed(1).replace('.',',')+' s nichts von der Zentrale. Ausgänge aus, an UART B/C geht nichts weiter.');
+  $('f-warn').style.display=w.length?'':'none'; $('f-warn').innerHTML=w.join('<br>');
+  const o=f.own, Z=(f.role==='Zentrale');
+  const tiles=Z
+    ?[[o.ch_cable,'Kanäle vom Kabel'],[o.frames_out,'Frames in den Funk'],[o.frames_in,'Antworten aus Funk'],
+      [o.sent,'Pakete gesendet'],[o.noack,'nicht zugestellt'],[o.qfull,'Warteschlange voll']]
+    :[[o.ch_funk,'Kanäle aus Funk'],[o.frames_in,'Frames aus Funk'],[o.frames_out,'Antworten in den Funk'],
+      [o.sent,'Pakete gesendet'],[o.noack,'nicht zugestellt'],[o.qfull,'Warteschlange voll']];
+  $('f-own').innerHTML=tiles.map(t=>`<div><b>${t[0]}</b><span>${t[1]}</span></div>`).join('')
+    // v5.02: Gesamtzaehler fuer die Fehlersuche
+    +(f.total?`<div style="grid-column:1/-1;font-size:12px;color:var(--sub)">Gesamt: ${Z?'Frames in den Funk':'Antworten in den Funk'} ${f.total.frames_out} · gesendet ${f.total.sent} · aus Funk ${f.total.frames_in} · Bytes geschrieben ${f.total.wr_bytes} · verworfen: ohne Gegenstelle ${f.total.no_peer}, Rückkanal aus ${f.total.back_drop}, Rahmenfehler ${f.total.wr_resync} · Sendefehler ${o.senderr}</div>`:'');
+  $('f-peers-title').textContent='Gegenstellen ('+f.peers.length+')';
+  $('f-peers').innerHTML=f.peers.length?f.peers.map(p=>{
+    const a=funkAmp(p.loss,p.rssi,p.alive);
+    return `<div class="peer"><div class="peer-top"><span class="amp ${a}"></span><b>${p.name}</b>`+
+      `<span class="badge ${p.role==='Zentrale'?'badge-warn':'badge-ok'}">${p.role}</span>`+
+      `<span class="mac">${p.addr} · ${p.mac}</span></div>`+
+      `<div class="peer-grid">`+
+      `<div><span>${Z?'Antworten/s':'Pakete/s'}</span><b>${p.pps}</b></div>`+
+      `<div><span>Verlust</span><b>${fmtLoss(p.loss)}</b></div>`+
+      `<div><span>RSSI</span><b>${p.rssi} dBm</b></div>`+
+      `<div><span>Aussetzer &gt;200 ms</span><b>${p.drops}</b></div>`+
+      `<div><span>längste Lücke</span><b>${p.gap} ms</b></div>`+
+      `<div><span>verbunden seit</span><b>${p.up}</b></div></div></div>`;
+  }).join(''):'<div style="color:var(--sub);font-size:13px">Noch keine Gegenstelle gefunden. Kennung und Funkkanal müssen bei allen Teilen gleich sein.</div>';
+}
+
+
 async function fetchConfig(){
   const d=await api('/api/config');
   if(!d)return;
@@ -1333,6 +1503,7 @@ async function fetchConfig(){
   $('row-portc').style.display=d.has_portc?'':'none';
   $('row-portc-baud').style.display=d.has_portc?'':'none';
   $('portc-dup').style.display=d.portc_dup?'block':'none';
+  fillFunkCfg(d);   // v1.10 Funk
   updateRcRows(d.rc_system, ek);
   window._rcBoot=parseInt(d.rc_system);
 }
@@ -1340,7 +1511,8 @@ async function fetchConfig(){
 // Sichtbarkeit der Rows je nach RC-System und Einkanal-Status
 // RC-Sound Logik: CRSF -> nur Modul-Adresse; SBUS -> Kanal + (wenn aktiv) Modus
 function updateRcRows(rc, ek){
-  const isCrsf=(parseInt(rc)===4);
+  const isCrsf=(parseInt(rc)>=4);   // v1.10: 5/6 sind CRSF
+  showFunkCfg(parseInt(rc));
   const ekAktiv=(ek!==999);
   $('row-sbus-ch').style.display=isCrsf?'none':'';
   $('row-ek').style.display=(isCrsf||!ekAktiv)?'none':'';
@@ -1360,7 +1532,7 @@ async function onRcChange(){
   const curEk=parseInt($('sel-ek').value)||0;
   updateRcRows(newRc, $('sel-sbus-ch').value==999?999:curEk);
   const oldRc=window._rcBoot||newRc;
-  const needsRestart=(newRc===4)!==(oldRc===4);
+  const needsRestart=(newRc!==oldRc)&&(newRc>=4||oldRc>=4);   // v1.10: Funk startet beim Booten
   await api('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({rc_system:newRc})});
   const hint=$('rc-hint');
@@ -1434,7 +1606,7 @@ async function onAdrChange(){
 }
 // NEU V3.00: MKan-Gruppe g (0 oder 1) - Adresse (CRSF) bzw. Kanal+Modus (SBUS)
 async function onMkanChange(g){
-  const isCrsf=(parseInt($('sel-rc').value)===4);
+  const isCrsf=(parseInt($('sel-rc').value)>=4);
   const body={};
   if(isCrsf){
     body['ek_gadr'+g]=parseInt($('sel-mkan-adr'+g).value);
@@ -1583,7 +1755,8 @@ async function importConfigData(data){
       ek_gadr0:s.ek_gadr0, ek_gadr1:s.ek_gadr1,           // v1.00: MKan-Gruppen
       sbus_gch0:s.sbus_gch0, sbus_gch1:s.sbus_gch1,
       sbus_gmode0:s.sbus_gmode0, sbus_gmode1:s.sbus_gmode1,
-      lua_sounds:s.lua_sounds, led_pin:s.led_pin          // v1.00: Kombimodul
+      led_pin:s.led_pin,                                  // v1.00: Kombimodul
+      funk_id:s.funk_id, funk_ch:s.funk_ch, funk_pwr:s.funk_pwr, funk_rate:s.funk_rate, funk_back:s.funk_back   // v1.10
     })});
   for(const o of (data.outputs||[])){
     if(o.ch===undefined) continue;
@@ -1861,7 +2034,7 @@ function slSet(sid,lid,v){sv(sid,v);if(lid)document.getElementById(lid).textCont
 
 // ─── RC-System / HW-Config bedingte Felder ──────────────────────────────
 function onRcSys(){
-  var crsf=(gi('rc-sys')===4);
+  var crsf=(gi('rc-sys')>=4);
   document.getElementById('c-ekch').className='card'+(crsf?' hidden':'');
   document.getElementById('c-ekmo').className='card'+(crsf?' hidden':'');
   document.getElementById('c-madr').className='card'+(crsf?'':' hidden');
@@ -2600,11 +2773,12 @@ loadSoundFileStatus(); // Datei-Status initial laden (Tab "Motor" ist beim Start
 <script>
 // ── Zusammenfuehrung (nur Pruefstand): Reiter, Karten verschieben ──
 (function(){
-  var TABS8=['overview','outputs','motor','sounds','store','rc','wifi','lipo','debug'];
+  var TABS8=['overview','outputs','motor','sounds','store','rc','funk','wifi','lipo','debug'];   // v1.10: Funk
   window.showTab=function(t){
     TABS8.forEach(function(n){var e=document.getElementById('tab-'+n);if(e)e.style.display=(n===t?'block':'none');});
     document.querySelectorAll('nav .tab').forEach(function(el,i){el.classList.toggle('active',TABS8[i]===t);});
     if(t==='debug') startPoll(); else stopPoll();
+    if(t==='funk') startFunkPoll(); else stopFunkPoll();   // v1.10
     if(t==='overview'||t==='outputs'||t==='wifi') fetchStatus();
     if(t==='rc'||t==='wifi') { fetchConfig(); loadKombi(); }
     if(t==='motor'||t==='sounds') loadSoundFileStatus();
@@ -2639,8 +2813,8 @@ loadSoundFileStatus(); // Datei-Status initial laden (Tab "Motor" ist beim Start
   // Sound-Diagnose in den Reiter Debug
   ['BUS Kan','WAV Dateien','S.Port Diagnose'].forEach(function(t){var c=card('#stab-debug',t);if(c)document.getElementById('tab-debug').appendChild(wrap(c));});
   window.loadKombi=function(){fetch('/api/config').then(function(r){return r.json();}).then(function(c){
-    document.getElementById('k-luasnd').value=String(c.lua_sounds||8);document.getElementById('k-led').value=String(c.led_pin||48);});};
-  window.saveKombi=function(){fetch('/api/config',{method:'POST',body:JSON.stringify({lua_sounds:+document.getElementById('k-luasnd').value,led_pin:+document.getElementById('k-led').value})})
+    document.getElementById('k-led').value=String(c.led_pin||48);});};
+  window.saveKombi=function(){fetch('/api/config',{method:'POST',body:JSON.stringify({led_pin:+document.getElementById('k-led').value})})
     .then(function(){toast('Gespeichert, wirkt nach Neustart');});};
   loadKombi();
 })();

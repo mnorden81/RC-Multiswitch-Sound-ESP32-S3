@@ -323,12 +323,6 @@ static void luaSourceText(int cfg, char* out, size_t len) {
     if (sel <= 3) snprintf(out, len, "%s %d", N[sel], einNr(cfg));
     else          snprintf(out, len, "%s", N[sel < 6 ? sel : 5]);
 }
-static void luaShowSoundFolder(uint8_t s, LuaView& v, char* buf) {
-    char src[12];
-    luaSourceText(scfg.Source_Start_Sound[s], src, sizeof(src));
-    snprintf(buf, LUA_VIEW_BUF, "Sound %d (%s)", s, src);
-    v.name = buf;
-}
 static void luaShowMotorFolder(uint8_t, LuaView& v, char* buf) {
     char src[12];
     luaSourceText(scfg.Source_Start_Sound[0], src, sizeof(src));
@@ -423,23 +417,55 @@ void soundLuaMotor(LuaMenu& m, uint8_t f) {
 
 static void soundLuaMap(LuaMenu& m, uint8_t first);   // v1.07, weiter unten
 
-// Sound s (1..count): Ordner fi = 112 + (s-1)*6, Felder fi+1 .. fi+5
-void soundLuaSounds(LuaMenu& m, uint8_t count) {
-    if (count > SND_LUA_MAX) count = SND_LUA_MAX;
-    for (uint8_t s = 1; s <= count; s++) {
-        uint8_t fi = SND_LUA_FIRST_ID + (s - 1) * 6;
-        LuaItem* f = m.folder(fi, 0, "Sound");
-        if (!f) return;
-        f->arg = s; f->view = luaShowSoundFolder;
-        m.select(fi + 1, fi, "Quelle", EIN_SEL, luaGetSource, luaSetSource, s);
-        m.u8(fi + 2, fi, "Kanal Nr", 1, 16, "", luaGetChannel, luaSetChannel, s)->view = luaShowChannel;
-        m.u8(fi + 3, fi, "Volumen", 0, 200, "", luaGetVolume, luaSetVolume, s);
-        m.select(fi + 4, fi, "Wiedergabe Mode", "Normal;Loop;Tippbetrieb", luaGetPlayMode, luaSetPlayMode, s);
-        m.select(fi + 5, fi, "Test Sound", "Aus;Ein", luaGetTest, luaSetTest, s);
+// ── Ordner "Sounds" (v1.10, gleich in allen Soundmodulen) ────────────────
+// "Sound Nr" waehlt nur aus, welcher Sound gerade bearbeitet wird (nicht
+// gespeichert, wie "Platz" bei der Sound-Zuordnung). Die Felder darunter
+// lesen und schreiben den gewaehlten Sound. Das ELRS-Lua laedt nach einer
+// Aenderung von "Sound Nr" die Zahlen-/Auswahlfelder im Ordner neu, darum
+// ist "Name" eine Auswahl mit nur einem Eintrag statt eines Info-Felds.
+// Damit sind im Lua alle 24 Sounds erreichbar (bis v1.09 hoechstens 23).
+static uint8_t luaSndSel = 1;   // 1..RCSOUND_NUM_SOUNDS
+static char    luaSndNrOpts[4 * RCSOUND_NUM_SOUNDS + 4];
+static uint8_t luaGetSndNr(uint8_t)                 { return luaSndSel - 1; }
+static void    luaSetSndNr(uint8_t, uint8_t v)      { if (v < RCSOUND_NUM_SOUNDS) luaSndSel = v + 1; }
+static uint8_t luaGetSndZero(uint8_t)               { return 0; }
+static void luaShowSndName(uint8_t, LuaView& v, char* buf) {
+    // Name = eigener Sound-Name (Web-UI, Standard "Sound N")
+    snprintf(buf, LUA_VIEW_BUF, "%.20s", scfg.Sound_Name[luaSndSel]);
+    v.text = buf;
+    v.max  = 0;
+    v.value = 0;
+}
+static uint8_t luaGetSelSource(uint8_t)             { return luaGetSource(luaSndSel); }
+static void    luaSetSelSource(uint8_t, uint8_t v)  { luaSetSource(luaSndSel, v); }
+static void    luaShowSelChannel(uint8_t, LuaView& v, char* b) { luaShowChannel(luaSndSel, v, b); }
+static uint8_t luaGetSelChannel(uint8_t)            { return luaGetChannel(luaSndSel); }
+static void    luaSetSelChannel(uint8_t, uint8_t v) { luaSetChannel(luaSndSel, v); }
+static uint8_t luaGetSelVolume(uint8_t)             { return luaGetVolume(luaSndSel); }
+static void    luaSetSelVolume(uint8_t, uint8_t v)  { luaSetVolume(luaSndSel, v); }
+static uint8_t luaGetSelPlayMode(uint8_t)           { return luaGetPlayMode(luaSndSel); }
+static void    luaSetSelPlayMode(uint8_t, uint8_t v){ luaSetPlayMode(luaSndSel, v); }
+static uint8_t luaGetSelTest(uint8_t)               { return luaGetTest(luaSndSel); }
+static void    luaSetSelTest(uint8_t, uint8_t v)    { luaSetTest(luaSndSel, v); }
+
+// Ordner fi = 112, Felder 113-119, danach Sound-Zuordnung 120-123
+void soundLuaSounds(LuaMenu& m) {
+    {
+        size_t len = 0;
+        luaSndNrOpts[0] = '\0';
+        for (int i = 1; i <= RCSOUND_NUM_SOUNDS; i++)
+            len += snprintf(luaSndNrOpts + len, sizeof(luaSndNrOpts) - len, "%s%d", i > 1 ? ";" : "", i);
     }
-    // v1.07: Sound-Zuordnung direkt dahinter (bei 23 Sounds Felder 250-253),
-    // damit die Feld-IDs lueckenlos bleiben
-    soundLuaMap(m, SND_LUA_FIRST_ID + count * 6);
+    const uint8_t S = SND_LUA_FIRST_ID;
+    m.folder(S, 0, "Sounds");
+    m.select(S + 1, S, "Sound Nr", luaSndNrOpts, luaGetSndNr, luaSetSndNr);
+    m.select(S + 2, S, "Name", "-", luaGetSndZero, nullptr)->view = luaShowSndName;
+    m.select(S + 3, S, "Quelle", EIN_SEL, luaGetSelSource, luaSetSelSource);
+    m.u8(S + 4, S, "Kanal Nr", 1, 16, "", luaGetSelChannel, luaSetSelChannel)->view = luaShowSelChannel;
+    m.u8(S + 5, S, "Volumen", 0, 200, "", luaGetSelVolume, luaSetSelVolume);
+    m.select(S + 6, S, "Wiedergabe Mode", "Normal;Loop;Tippbetrieb", luaGetSelPlayMode, luaSetSelPlayMode);
+    m.select(S + 7, S, "Test Sound", "Aus;Ein", luaGetSelTest, luaSetSelTest);
+    soundLuaMap(m, S + 8);
 }
 
 // ── Sound-Zuordnung (v1.07, Felder direkt nach dem letzten Sound) ───────────────────────────────
