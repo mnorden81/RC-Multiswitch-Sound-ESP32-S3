@@ -2,6 +2,10 @@
 
 Die Version wird bei jeder Änderung erhöht, weil sie als CRSF „Parameter Version Number“ an den Sender geht. Neueste Version oben. Noch keine Version ist auf der Platine getestet.
 
+## v1.11 (RC_Common 1.5.2)
+- Lua: statt acht Ordnern „Ausgang 1“ bis „Ausgang 8“ ein Ordner „Ausgaenge“ mit Auswahl „Ausgang Nr“ (1–8), darunter Name, Quelle, Nr, Blink, AN, AUS, PWM Modus, Festwert, Test. Gleiches Prinzip wie Ordner „Sounds“ und RC-Multiswitch v5.05. 71 statt 132 Felder, das Menü lädt schneller.
+- Neue Feld-IDs: Ausgaenge 5–15, WLAN 16–19, UART B/C 20–24, Motor 25–37, Einstellungen 38–49, Gerätename 50, Sounds 51–58, Sound-Zuordnung 59–62, LED Farbfolge 63, Funk 64–71. NVS und Web-UI unverändert; der Sender lädt das Menü nach dem Update neu.
+
 ## v1.10 (RC_Common 1.5.2)
 - Neu: Funk (ESP-NOW) wie RC-Multiswitch v5.04. RC-System 5 = „CRSF + Funk senden (Zentrale)“, 6 = „CRSF aus Funk (Teilnehmer)“, UART A bleibt dann frei. Web-UI: Karte „Funk“ im Reiter RC-System, Reiter „Funk“ mit Verbindungsanzeige, Hinweis auf der Übersicht. Lua: Ordner „Funk“ (Felder 125–132). Status-LED: zweite Zentrale = Konfigurationsfehler.
 - Lua: statt einzelner Ordner „Sound 1“ … „Sound n“ ein Ordner „Sounds“ mit Auswahl „Sound Nr“ für alle 24 Sounds (gleich in allen Soundmodulen). Feld-IDs ab 112 neu: Sounds 112–119, Sound-Zuordnung 120–123, LED Farbfolge 124.

@@ -46,16 +46,21 @@ Das DevKitC mit der Buchse **USB** (nicht "UART") an den PC stecken. Nach etwa e
 - Voraussetzung: Firmware gebaut mit **USB Mode: USB-OTG (TinyUSB)** (die Dateien aus GitHub Actions sind so gebaut). Nicht auf Hardware getestet.
 
 ## Lua-Menue (CRSF)
+Ab v1.11 neu durchnummeriert, 71 statt 132 Felder.
+
 | Feld | Inhalt |
 |---|---|
-| 0-85 | wie RC-Multiswitch v4.06: Global (Switch Addr, CRSF Kanal), Ausgang 1-8, WLAN, UART B/C |
-| 86-98 | Motor |
-| 99-110 | Einstellungen: Sound-Adresse, RC-System, Sound-Einkanal (SBUS), Gruppenadressen, SBUS-Gruppen, WLAN jetzt |
-| 111 | Geraetename |
-| 112-119 | Ordner "Sounds" (v1.10): Sound Nr (1-24, nur Auswahl), Name, Quelle, Kanal Nr, Volumen, Wiedergabe Mode, Test Sound |
-| 120-123 | Sound-Zuordnung (Platz, Datei, Groesse) |
-| 124 | LED Farbfolge (im Ordner Global) |
-| 125-132 | Funk (v1.10): Betrieb, Kennung, Kanal, Leistung, Kanaele alle, Rueckkanal, Verbindung |
+| 0-4 | Version, Global (Switch Addr, SBUS EK Kanal) |
+| 5-15 | Ordner "Ausgaenge" (v1.11): Ausgang Nr (1-8, nur Auswahl), Name, Quelle, Nr, Blink, Blink AN/AUS, PWM Modus, PWM Festwert, Test |
+| 16-19 | WLAN |
+| 20-24 | UART B/C |
+| 25-37 | Motor |
+| 38-49 | Einstellungen: Sound-Adresse, RC-System, Sound-Einkanal (SBUS), Gruppenadressen, SBUS-Gruppen, WLAN jetzt |
+| 50 | Geraetename |
+| 51-58 | Ordner "Sounds": Sound Nr (1-24, nur Auswahl), Name, Quelle, Kanal Nr, Volumen, Wiedergabe Mode, Test Sound |
+| 59-62 | Sound-Zuordnung (Platz, Datei, Groesse) |
+| 63 | LED Farbfolge (im Ordner Global) |
+| 64-71 | Funk: Betrieb, Kennung, Kanal, Leistung, Kanaele alle, Rueckkanal, Verbindung |
 
 Seit v1.10 sind im Lua alle 24 Sounds erreichbar (vorher hoechstens 23, einstellbar in der Web-UI). Der Ordner "Sounds" ist in allen Soundmodulen gleich.
 

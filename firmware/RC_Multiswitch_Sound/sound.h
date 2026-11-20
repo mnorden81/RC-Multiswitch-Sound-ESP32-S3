@@ -30,10 +30,10 @@ static constexpr int    SND_FILE_SLOTS     = 3 + RCSOUND_NUM_SOUNDS;
 static constexpr size_t SND_NAME_MAX_BASE  = 40;   // SD-Karte: Name ohne ".wav"
 static constexpr size_t SND_FILE_LEN       = 48;   // >= SND_NAME_MAX_BASE + ".wav" + Null
 
-// v1.10: im Lua-Menue ein Ordner "Sounds" (Feld 112) mit Auswahl "Sound Nr"
-// fuer alle 24 Sounds (Felder 113-119), danach die Sound-Zuordnung
-// (120-123). Gleich in allen Soundmodulen.
-static constexpr uint8_t SND_LUA_FIRST_ID  = 112;
+// v1.10: im Lua-Menue ein Ordner "Sounds" mit Auswahl "Sound Nr" fuer alle
+// 24 Sounds, danach die Sound-Zuordnung. Gleich in allen Soundmodulen.
+// v1.11: Ordner Sounds = Feld 51 (Felder 52-58), Sound-Zuordnung 59-62.
+static constexpr uint8_t SND_LUA_FIRST_ID  = 51;
 static constexpr uint8_t SND_LUA_FIELDS    = 8 + 4;   // Sounds-Ordner + Sound-Zuordnung
 
 struct SoundConfig {
@@ -91,7 +91,7 @@ uint16_t soundEinkanalData();
 bool isValidEinSource(int c);
 bool soundEngineRunning();     // v1.07: Motor laeuft (Leerlauf-Schleife)
 
-// Lua-Menue: Motor (86-98) und Sound 1..count (ab 112), dahinter der Ordner
+// Lua-Menue: Motor (25-37) und Sound 1..count (ab 51), dahinter der Ordner
 // "Sound-Zuordnung" (v1.07, 4 Felder direkt nach dem letzten Sound). Die Felder im Ordner
 // "Einstellungen" baut der Schaltteil, die Lese-/Schreibfunktionen des
 // Soundteils stehen hier.

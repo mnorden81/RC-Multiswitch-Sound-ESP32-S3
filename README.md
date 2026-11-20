@@ -45,7 +45,7 @@ Board: ESP32-S3-DevKitC-1 N16R8 (oder Clone)
 - Footprint ESP32-S3-DevKitC-1_THT mit Reihenabstand 25,4 mm. Vor dem Layout am echten Board nachmessen. Eigene Footprints fuer PCM5102A, microSD-Modul und TPA3118-Modul liegen in hardware/footprints.pretty; die Masse sind aus Fotos geschaetzt und vor dem Layout nachzumessen.
 - Nicht gleichzeitig USB und BEC anschliessen, ohne die Schutzdiode des Boards zu pruefen.
 
-## Firmware (v1.09, nicht auf Hardware getestet)
+## Firmware (v1.11, nicht auf Hardware getestet)
 Arduino-Sketch [firmware/RC_Multiswitch_Sound](firmware/RC_Multiswitch_Sound), Beschreibung in [firmware/README.md](firmware/README.md), alle Versionen in [CHANGELOG.md](CHANGELOG.md).
 
 Reine Zusammenfuehrung von zwei bestehenden Firmwares:
@@ -57,6 +57,7 @@ Neu gegenueber den Basis-Firmwares (Entscheidungen 21.-28.10.2026):
 - Zwei Adressen: Schalt-Adresse (Ausgaenge, zugleich CRSF-Geraeteadresse) und Sound-Adresse (Einzelkanal-Sounds). Gleiche Zahl = dieselben Schalter schalten beides.
 - Status-LED in der Web-UI waehlbar: IO48 (DevKitC-1 v1.0, Vorgabe) oder IO38 (v1.1). Ab v1.08 dasselbe Farbschema wie alle Module: grün langsam = OK, rot schnell = Failsafe / kein RC-Link, rot Aufblitzen (kurz alle 1 s) = kein Signal, blau Doppelblitz = doppelte Moduladresse, violett statt grün/rot = WLAN an. Rot und Grün vertauscht? Lua Global > „LED Farbfolge“ umstellen (Vorgabe GRB).
 - Lua-Menue: Ordner zeigen ihren aktuellen Wert (z. B. „Ausgang 1 (Kanal_L 5)“, „Einstellungen (ELRS CRSF)“), Felder ohne Wirkung werden ausgeblendet (z. B. reine SBUS-Felder, Blinkzeiten bei Dauerlicht). Das RC-System wird im Lua nur angezeigt, umstellen geht in der Web-UI. Reihenfolge im Hauptmenü: Version, Global, Ausgang 1–8, WLAN, UART B/C, Motor, Einstellungen, Gerätename, Sounds, Sound-Zuordnung, Funk.
+- Lua-Ordner „Ausgaenge“ (ab v1.11, wie Multiswitch v5.05): oben „Ausgang Nr“ (1–8) wählen, darunter die Einstellungen dieses Ausgangs. 71 statt 132 Lua-Felder.
 - Lua-Ordner „Sounds“ (ab v1.10, gleich in allen Soundmodulen): oben „Sound Nr“ (1–24) wählen, darunter Name, Quelle, Kanal Nr, Volumen, Wiedergabe Mode und Test Sound dieses Sounds. Damit sind alle 24 Sounds am Sender einstellbar.
 - Funk (ab v1.10, wie Multiswitch v5.04 und CRSF-Router): RC-System „CRSF + Funk senden (Zentrale)“ am Empfänger oder „CRSF aus Funk (Teilnehmer)“, dann bleibt UART A frei. Kennung und Funkkanal bei allen Modulen eines Fahrzeugs gleich einstellen (Reiter RC-System, Karte „Funk“, oder Lua-Ordner „Funk“). Reiter „Funk“ zeigt Verbindung, Verlust und RSSI. Der Access Point läuft dann auf dem Funkkanal.
 - Eigener Name je Sound und je Ausgang (16 Zeichen), Vorgabe "Sound N" bzw. "Ausgang N".
