@@ -8,6 +8,12 @@ Kombiniert den RC-Multiswitch mit einem Soundmodul auf einer Platine: 8 Schaltka
 
 Ausfuehrliche Projektbeschreibung: [docs/Projektbeschreibung.docx](docs/Projektbeschreibung.docx)
 
+## Projektvideo
+
+[![Projektvideo: CRSF-Ökosystem für RC-Modelle (zum Abspielen anklicken)](https://github.com/mnorden81/RC-CRSF-Router-ESP32-S3/raw/main/docs/video/projektvideo-vorschau.jpg)](https://github.com/mnorden81/RC-CRSF-Router-ESP32-S3/blob/main/docs/video/CRSF-Oekosystem_Projektvorstellung.mp4)
+
+Rund zwei Minuten Überblick über das ganze CRSF-Ökosystem: CRSF-Router, Multiswitch, Soundmodule, der ESP-NOW-CRSF-Link mit Funk in den Modulen und die Prüfstände für WebUI und Lua-Menü. Bild anklicken, dann startet das Video auf GitHub. Das Video liegt im Repo [RC-CRSF-Router-ESP32-S3](https://github.com/mnorden81/RC-CRSF-Router-ESP32-S3/tree/main/docs/video), weil es alle Module gemeinsam zeigt.
+
 ## Merkmale
 - 8 Schaltkanaele ueber TBD62083APG, Kontroll-LED je Kanal
 - UART A (Eingang), UART B und UART C als JST PH 4
