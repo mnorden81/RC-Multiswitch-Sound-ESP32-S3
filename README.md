@@ -168,6 +168,10 @@ Hochgeladene WAV-Dateien behalten ihren Namen. Umlaute werden ersetzt (ä → ae
 - Gehaeuse (hardware/gehaeuse/) am echten Aufbau pruefen: Hoehe Elko C1 (22 mm angenommen), ESP 13 mm ueber der Platine, Lage USB-C und microSD-Slot
 - Firmware auf der Platine testen (Ausgaenge, Sound, SD-Karte, Status-LED IO48/IO38)
 
+## Sound-Aufbereitung (im Browser)
+
+[Sound-Aufbereitung öffnen](https://raw.githack.com/mnorden81/RC-Multiswitch-Sound-ESP32-S3/main/werkzeuge/sound-aufbereitung.html#pcm) – prüft Audiodateien (WAV, MP3, M4A …) und wandelt sie passend für dieses Modul um: Multiswitch-Sound S3 (SD-Karte, PCM5102A). Ohne Installation, auch am Handy; nichts wird hochgeladen, alles läuft im Browser. Die Dateien behalten ihren Namen (Umlaute und Leerzeichen werden wie im Modul ersetzt), die Zuordnung zum Sound-Platz geschieht im Modul im Tab „Speicher“. Oben lässt sich das Modul umstellen. Selbst erzeugte, rechtefreie Testsounds (Hupe, Blinker, Rückfahrwarner, Martinshorn, Motor-Leerlauf als Schleife, Sweep 40 Hz–16 kHz) gibt es per Knopf „Testsounds einfügen“ oder direkt in [`werkzeuge/testsounds/`](werkzeuge/testsounds/).
+
 ## Prüfstand (WebUI und Lua im Browser)
 
 In [`pruefstand/`](pruefstand/) liegt eine Seite, die die echte Weboberfläche und das Lua-Menü dieser Firmware im Browser zeigt (alle Varianten, Modul simuliert): [Prüfstand öffnen](https://raw.githack.com/mnorden81/RC-Multiswitch-Sound-ESP32-S3/main/pruefstand/pruefstand.html). Sie wird bei jeder Firmware-Änderung neu gebaut, die GitHub-Prüfung „Prüfstand" achtet darauf.
