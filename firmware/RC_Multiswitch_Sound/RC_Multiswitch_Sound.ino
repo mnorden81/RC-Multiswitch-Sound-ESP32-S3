@@ -88,7 +88,7 @@
 #include "sound.h"                          // Soundteil (Sound-Basis v7.21)
 #include "usb_drive.h"                      // v1.04: SD-Karte als USB-Laufwerk
 
-constexpr uint16_t Version = 111; // 1.11 - CRSF Parameter Version Number
+constexpr uint16_t Version = 112; // 1.12 - CRSF Parameter Version Number
 uint16_t fwVersion() { return Version; }   // fuer sound_web.cpp
 
 // ======== SBUS-Schwellen (benannte Konstanten) ==================
